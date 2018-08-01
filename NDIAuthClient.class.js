@@ -191,6 +191,18 @@ class NDIAuthClient {
   }
 
   /**
+   * Creates a nested error object
+   * @param  {String} errMsg - A human readable description of the error
+   * @param  {String} cause - The error stack
+   * @return {String} nestedError - Nested error object
+   */
+  makeNestedError(errMsg, cause) {
+    const nestedError = new Error(errMsg)
+    nestedError.cause = cause
+    return nestedError
+  }
+
+  /**
    * Carries artifactResolve and artifactResponse protocol
    * @param  {String} samlArt - Token returned by spcp server via browser redirect
    * @param  {String} relayState - State passed in on intial spcp redirect
@@ -221,68 +233,66 @@ class NDIAuthClient {
       const { artifactResolve, signingError } = this.signXML(xml)
 
       if (!artifactResolve) {
-        const nestedError = new Error(
-          "Error in Step 2: Form Artifact Resolve with Artifact and Sign"
+        const nestedError = this.makeNestedError(
+          "Error in Step 2: Form Artifact Resolve with Artifact and Sign",
+          signingError
         )
-        nestedError.cause = signingError
         callback(nestedError, { relayState })
       } else {
         // Step 3: Send Artifact Resolve over OOB
-        request.post(
-          {
-            headers: {
-              "content-type": "text/xml; charset=utf-8",
-              SOAPAction: "http://www.oasis-open.org/committees/security",
-            },
-            url: this.idpEndpoint,
-            body: artifactResolve,
+        const requestOptions = {
+          headers: {
+            "content-type": "text/xml; charset=utf-8",
+            SOAPAction: "http://www.oasis-open.org/committees/security",
           },
-          (resolveError, response, body) => {
-            if (resolveError) {
-              const nestedError = new Error(
-                "Error in Step 3: Send Artifact Resolve over OOB"
+          url: this.idpEndpoint,
+          body: artifactResolve,
+        }
+        request.post(requestOptions, (resolveError, response, body) => {
+          if (resolveError) {
+            const nestedError = this.makeNestedError(
+              "Error in Step 3: Send Artifact Resolve over OOB",
+              resolveError
+            )
+            callback(nestedError, { relayState })
+          } else {
+            // Step 4: Verify Artifact Response
+            let responseXML = body
+            let responseDOM = new DOMParser().parseFromString(responseXML)
+            let signatures = xpath.select(
+              "//*[local-name(.)='Signature']",
+              responseDOM
+            )
+            const { isVerified, verificationError } = this.verifyXML(
+              responseXML,
+              signatures
+            )
+            if (!isVerified) {
+              const nestedError = this.makeNestedError(
+                "Error in Step 4: Verify Artifact Response",
+                verificationError
               )
-              nestedError.cause = resolveError
               callback(nestedError, { relayState })
             } else {
-              // Step 4: Verify Artifact Response
-              let responseXML = body
-              let responseDOM = new DOMParser().parseFromString(responseXML)
-              let signatures = xpath.select(
-                "//*[local-name(.)='Signature']",
+              // Step 5: Decrypt Artifact Response
+              let encryptedData = xpath.select(
+                "//*[local-name(.)='EncryptedData']",
                 responseDOM
               )
-              const { isVerified, verificationError } = this.verifyXML(
-                responseXML,
-                signatures
-              )
-              if (!isVerified) {
-                const nestedError = new Error(
-                  "Error in Step 4: Verify Artifact Response"
-                )
-                nestedError.cause = verificationError
-                callback(nestedError, { relayState })
+              const { nric, decryptionError } = this.decryptXML(encryptedData)
+              let isValidNRIC = /^([STFGstfg]{1})+([0-9]{7})+([A-Za-z]{1})$/
+              if (nric && isValidNRIC.test(nric)) {
+                callback(null, { nric, relayState })
               } else {
-                // Step 5: Decrypt Artifact Response
-                let encryptedData = xpath.select(
-                  "//*[local-name(.)='EncryptedData']",
-                  responseDOM
+                const nestedError = this.makeNestedError(
+                  "Error in Step 5: Decrypt Artifact Response",
+                  decryptionError
                 )
-                const { nric, decryptionError } = this.decryptXML(encryptedData)
-                let isValidNRIC = /^([STFGstfg]{1})+([0-9]{7})+([A-Za-z]{1})$/
-                if (nric && isValidNRIC.test(nric)) {
-                  callback(null, { nric, relayState })
-                } else {
-                  const nestedError = new Error(
-                    "Error in Step 5: Decrypt Artifact Response"
-                  )
-                  nestedError.cause = decryptionError
-                  callback(nestedError, { relayState })
-                }
+                callback(nestedError, { relayState })
               }
             }
           }
-        )
+        })
       }
     }
   }
