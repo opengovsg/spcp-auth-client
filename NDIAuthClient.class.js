@@ -8,13 +8,11 @@ const request = require("request")
  * Helper class to assist authenication process with spcp servers
  */
 class NDIAuthClient {
-
   /**
    * Creates an instance of the class
    * @param  {Object} config - Configuration parameters for instance
    */
   constructor(config) {
-
     const PARAMS = [
       "partnerEntityId",
       "idpEndpoint",
@@ -22,17 +20,16 @@ class NDIAuthClient {
       "appKey",
       "appCert",
       "spcpCert",
-      "esrvcID"
+      "esrvcID",
     ]
 
     for (let param of PARAMS) {
       if (config[param]) {
         this[param] = config[param]
       } else {
-        throw param + " undefined"
+        throw new Error(param + " undefined")
       }
     }
-
   }
 
   /**
@@ -42,15 +39,20 @@ class NDIAuthClient {
    */
   createRedirectURL(target) {
     if (!target) {
-      return new Error('Target undefined')
+      return new Error("Target undefined")
     }
-    return this.idpLoginURL + 
-      "?RequestBinding=HTTPArtifact" + 
+    return (
+      this.idpLoginURL +
+      "?RequestBinding=HTTPArtifact" +
       "&ResponseBinding=HTTPArtifact" +
-      "&PartnerId=" + encodeURI(this.partnerEntityId) +
-      "&Target=" + encodeURI(target) +
+      "&PartnerId=" +
+      encodeURI(this.partnerEntityId) +
+      "&Target=" +
+      encodeURI(target) +
       "&NameIdFormat=Email" +
-      "&esrvcID=" + this.esrvcID
+      "&esrvcID=" +
+      this.esrvcID
+    )
   }
 
   /**
@@ -90,7 +92,6 @@ class NDIAuthClient {
     }
 
     return { artifactResolve, signingError }
-  
   }
 
   /**
@@ -197,8 +198,11 @@ class NDIAuthClient {
    */
   getNRIC(samlArt, relayState, callback) {
     // Step 1: Check if relay state present
-    if (!samlArt || !relayState ) {
-      callback(new Error("Error in Step 1: Callback or saml artifact not present"), { relayState })
+    if (!samlArt || !relayState) {
+      callback(
+        new Error("Error in Step 1: Callback or saml artifact not present"),
+        { relayState }
+      )
     } else {
       // Step 2: Form Artifact Resolve with Artifact and Sign
       const xml =
@@ -217,7 +221,9 @@ class NDIAuthClient {
       const { artifactResolve, signingError } = this.signXML(xml)
 
       if (!artifactResolve) {
-        const nestedError = new Error("Error in Step 2: Form Artifact Resolve with Artifact and Sign")
+        const nestedError = new Error(
+          "Error in Step 2: Form Artifact Resolve with Artifact and Sign"
+        )
         nestedError.cause = signingError
         callback(nestedError, { relayState })
       } else {
@@ -226,13 +232,16 @@ class NDIAuthClient {
           {
             headers: {
               "content-type": "text/xml; charset=utf-8",
-              "SOAPAction": "http://www.oasis-open.org/committees/security",
+              SOAPAction: "http://www.oasis-open.org/committees/security",
             },
             url: this.idpEndpoint,
             body: artifactResolve,
-          }, (resolveError, response, body) => {
+          },
+          (resolveError, response, body) => {
             if (resolveError) {
-              const nestedError = new Error("Error in Step 3: Send Artifact Resolve over OOB")
+              const nestedError = new Error(
+                "Error in Step 3: Send Artifact Resolve over OOB"
+              )
               nestedError.cause = resolveError
               callback(nestedError, { relayState })
             } else {
@@ -243,9 +252,14 @@ class NDIAuthClient {
                 "//*[local-name(.)='Signature']",
                 responseDOM
               )
-              const { isVerified, verificationError } = this.verifyXML(responseXML, signatures)
+              const { isVerified, verificationError } = this.verifyXML(
+                responseXML,
+                signatures
+              )
               if (!isVerified) {
-                const nestedError = new Error("Error in Step 4: Verify Artifact Response")
+                const nestedError = new Error(
+                  "Error in Step 4: Verify Artifact Response"
+                )
                 nestedError.cause = verificationError
                 callback(nestedError, { relayState })
               } else {
@@ -259,7 +273,9 @@ class NDIAuthClient {
                 if (nric && isValidNRIC.test(nric)) {
                   callback(null, { nric, relayState })
                 } else {
-                  const nestedError = new Error("Error in Step 5: Decrypt Artifact Response")
+                  const nestedError = new Error(
+                    "Error in Step 5: Decrypt Artifact Response"
+                  )
                   nestedError.cause = decryptionError
                   callback(nestedError, { relayState })
                 }
