@@ -3,6 +3,7 @@ const xpath = require("xpath")
 const DOMParser = require("xmldom").DOMParser
 const xmlEnc = require("xml-encryption")
 const request = require("request")
+const _ = require('lodash')
 
 /**
  * Helper class to assist authenication process with spcp servers
@@ -149,11 +150,11 @@ class NDIAuthClient {
   /**
    * Decrypts encrypted data in artifact response from SPCP based on app private key
    * @param  {String} encryptedData - Encrypted data in artifact response from SPCP
-   * @return {String} nric - Decrypted NRIC from encrypted data
+   * @return {String} username - Decrypted username from encrypted data
    */
   decryptXML(encryptedData) {
     let decryptedData
-    let nric = null
+    let userName = null
     let decryptionError = null
     let options = {
       key: this.appKey,
@@ -163,7 +164,7 @@ class NDIAuthClient {
     xmlEnc.decrypt(encryptedData.toString(), options, function(err, result) {
       if (err) {
         decryptionError = err
-        return { nric, decryptionError }
+        return { userName, decryptionError }
       } else {
         decryptedData = new DOMParser().parseFromString(result)
         encryptedData = xpath.select(
@@ -174,20 +175,14 @@ class NDIAuthClient {
       xmlEnc.decrypt(encryptedData.toString(), options, function(err, result) {
         if (err) {
           decryptionError = err
-          return { nric, decryptionError }
+          return { userName, decryptionError }
         } else {
           decryptedData = new DOMParser().parseFromString(result)
-          if (decryptedData) {
-            if (decryptedData.documentElement) {
-              if (decryptedData.documentElement.childNodes["0"]) {
-                nric = decryptedData.documentElement.childNodes["0"].data
-              }
-            }
-          }
+          userName = _.get(decryptedData, ['documentElement', 'childNodes', '0', 'data'], null)
         }
       })
     })
-    return { nric, decryptionError }
+    return { userName, decryptionError }
   }
 
   /**
@@ -206,9 +201,9 @@ class NDIAuthClient {
    * Carries artifactResolve and artifactResponse protocol
    * @param  {String} samlArt - Token returned by spcp server via browser redirect
    * @param  {String} relayState - State passed in on intial spcp redirect
-   * @param {Function} callback - Callback function with inputs error and NRIC
+   * @param {Function} callback - Callback function with inputs error and UserName
    */
-  getNRIC(samlArt, relayState, callback) {
+  getUserName(samlArt, relayState, callback) {
     // Step 1: Check if relay state present
     if (!samlArt || !relayState) {
       callback(
@@ -279,10 +274,9 @@ class NDIAuthClient {
                 "//*[local-name(.)='EncryptedData']",
                 responseDOM
               )
-              const { nric, decryptionError } = this.decryptXML(encryptedData)
-              let isValidNRIC = /^([STFGstfg]{1})+([0-9]{7})+([A-Za-z]{1})$/
-              if (nric && isValidNRIC.test(nric)) {
-                callback(null, { nric, relayState })
+              const { userName, decryptionError } = this.decryptXML(encryptedData)
+              if (userName) {
+                callback(null, { userName, relayState })
               } else {
                 const nestedError = this.makeNestedError(
                   "Error in Step 5: Decrypt Artifact Response",
