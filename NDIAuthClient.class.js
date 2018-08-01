@@ -14,16 +14,43 @@ class NDIAuthClient {
    * @param  {Object} config - Configuration parameters for instance
    */
   constructor(config) {
-    this.partnerEntityId = config.partnerEntityId
-    this.idpEndpoint = config.idpEndpoint
-    this.cookieMaxAge = config.cookieMaxAge
-    this.formsgKey = config.formsgKey
-    this.spcpCert = config.spcpCert
-    if (this.formsgKey) {
-      console.log('key defined 123')
-    } else {
-      console.log('key undefined 123')
+
+    const PARAMS = [
+      "partnerEntityId",
+      "idpEndpoint",
+      "idpLoginURL",
+      "appKey",
+      "appCert",
+      "spcpCert",
+      "esrvcID"
+    ]
+
+    for (let param of PARAMS) {
+      if (config[param]) {
+        this[param] = config[param]
+      } else {
+        throw param + " undefined"
+      }
     }
+
+  }
+
+  /**
+   * Generates redirect URL to Official SPCP log-in page
+   * @param  {String} target - State to pass SPCP
+   * @return {String} redirectURL - SPCP page to redirect to
+   */
+  createRedirectURL(target) {
+    if (!target) {
+      return new Error('Target undefined')
+    }
+    return this.idpLoginURL + 
+      "?RequestBinding=HTTPArtifact" + 
+      "&ResponseBinding=HTTPArtifact" +
+      "&PartnerId=" + encodeURI(this.partnerEntityId) +
+      "&Target=" + encodeURI(target) +
+      "&NameIdFormat=Email" +
+      "&esrvcID=" + this.esrvcID
   }
 
   /**
@@ -42,7 +69,7 @@ class NDIAuthClient {
     let xpath = "//*[local-name(.)='ArtifactResolve']"
     sig.addReference(xpath, transforms, digestAlgorithm)
 
-    sig.signingKey = this.formsgKey
+    sig.signingKey = this.appKey
     sig.signatureAlgorithm = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
 
     let artifactResolve = null
@@ -79,7 +106,7 @@ class NDIAuthClient {
      */
     function KeyInfo(key) {
       this.getKey = function() {
-        return Buffer.from(key, 'utf-8');
+        return key
       }
     }
 
@@ -119,9 +146,8 @@ class NDIAuthClient {
   }
 
   /**
-   * Decrypts encrypted data in artifact response from SPCP based on FormSG private key
+   * Decrypts encrypted data in artifact response from SPCP based on app private key
    * @param  {String} encryptedData - Encrypted data in artifact response from SPCP
-   * @param  {String} key - FormSG private key
    * @return {String} nric - Decrypted NRIC from encrypted data
    */
   decryptXML(encryptedData) {
@@ -129,7 +155,7 @@ class NDIAuthClient {
     let nric = null
     let decryptionError = null
     let options = {
-      key: this.formsgKey,
+      key: this.appKey,
     }
 
     // TODO: do not mutate input variables; have separate variables for each decrypted thing
@@ -165,17 +191,15 @@ class NDIAuthClient {
 
   /**
    * Carries artifactResolve and artifactResponse protocol
-   * @param  {String} SAMLart - Token returned by spcp server via browser redirect
-   * @param  {String} RelayState - State passed in on intial spcp redirect
-   * @param {String} callback - Callback function with inputs error and NRIC
+   * @param  {String} samlArt - Token returned by spcp server via browser redirect
+   * @param  {String} relayState - State passed in on intial spcp redirect
+   * @param {Function} callback - Callback function with inputs error and NRIC
    */
-  getNRIC(SAMLart, RelayState, callback) {
-    console.log('step 1')
+  getNRIC(samlArt, relayState, callback) {
     // Step 1: Check if relay state present
-    if (!SAMLart || !RelayState ) {
-      callback(new Error("Error in Step 1: Callback or saml artifact not present"))
+    if (!samlArt || !relayState ) {
+      callback(new Error("Error in Step 1: Callback or saml artifact not present"), { relayState })
     } else {
-      console.log('step 2')
       // Step 2: Form Artifact Resolve with Artifact and Sign
       const xml =
         '<samlp:ArtifactResolve xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"' +
@@ -187,41 +211,31 @@ class NDIAuthClient {
         this.partnerEntityId +
         "</saml:Issuer>" +
         "<samlp:Artifact>" +
-        SAMLart +
+        samlArt +
         "</samlp:Artifact>" +
         "</samlp:ArtifactResolve>"
-      if (this.formsgKey) {
-        console.log('key defined')
-      } else {
-        console.log('key undefined')
-      }
       const { artifactResolve, signingError } = this.signXML(xml)
 
       if (!artifactResolve) {
         const nestedError = new Error("Error in Step 2: Form Artifact Resolve with Artifact and Sign")
         nestedError.cause = signingError
-        callback(nestedError, null)
+        callback(nestedError, { relayState })
       } else {
-        console.log('step 3')
-        var verifyXML = this.verifyXML
-        var decryptXML = this.decryptXML
         // Step 3: Send Artifact Resolve over OOB
         request.post(
           {
             headers: {
               "content-type": "text/xml; charset=utf-8",
-              SOAPAction: "http://www.oasis-open.org/committees/security",
+              "SOAPAction": "http://www.oasis-open.org/committees/security",
             },
-            url: "/forms/spcp", //this.idpEndpoint,
+            url: this.idpEndpoint,
             body: artifactResolve,
-          },
-          function(resolveError, response, body) {
+          }, (resolveError, response, body) => {
             if (resolveError) {
               const nestedError = new Error("Error in Step 3: Send Artifact Resolve over OOB")
               nestedError.cause = resolveError
-              callback(nestedError, null)
+              callback(nestedError, { relayState })
             } else {
-              console.log('step 4')
               // Step 4: Verify Artifact Response
               let responseXML = body
               let responseDOM = new DOMParser().parseFromString(responseXML)
@@ -229,25 +243,25 @@ class NDIAuthClient {
                 "//*[local-name(.)='Signature']",
                 responseDOM
               )
-              const { isVerified, verificationError } = verifyXML(responseXML, signatures)
+              const { isVerified, verificationError } = this.verifyXML(responseXML, signatures)
               if (!isVerified) {
                 const nestedError = new Error("Error in Step 4: Verify Artifact Response")
                 nestedError.cause = verificationError
-                callback(nestedError, null)
+                callback(nestedError, { relayState })
               } else {
                 // Step 5: Decrypt Artifact Response
                 let encryptedData = xpath.select(
                   "//*[local-name(.)='EncryptedData']",
                   responseDOM
                 )
-                const { nric, decryptionError } = decryptXML(encryptedData)
+                const { nric, decryptionError } = this.decryptXML(encryptedData)
                 let isValidNRIC = /^([STFGstfg]{1})+([0-9]{7})+([A-Za-z]{1})$/
                 if (nric && isValidNRIC.test(nric)) {
-                  callback(null, nric)
+                  callback(null, { nric, relayState })
                 } else {
                   const nestedError = new Error("Error in Step 5: Decrypt Artifact Response")
                   nestedError.cause = decryptionError
-                  callback(nestedError, null)
+                  callback(nestedError, { relayState })
                 }
               }
             }
