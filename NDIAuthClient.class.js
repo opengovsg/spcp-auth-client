@@ -14,6 +14,13 @@ class NDIAuthClient {
    * Creates an instance of the class
    * This instance will create and verify JSON Web Tokens (JWT) using RSA-256
    * @param  {Object} config - Configuration parameters for instance
+   * @param  {String} config.partnerEntityId - the partner entity id
+   * @param  {String} config.idpLoginURL - the fully-qualified SingPass/CorpPass IDP url to redirect login attempts to
+   * @param  {String} config.idpEndpoint - the fully-qualified SingPass/CorpPass IDP url for out-of-band (OOB) authentication
+   * @param  {String} config.esrvcID - the e-service identifier registered with SingPass/CorpPass
+   * @param  {String} config.appCert - the e-service public certificate issued to SingPass/CorpPass
+   * @param  {String} config.appKey - the e-service certificate private key
+   * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    */
   constructor (config) {
     const PARAMS = [
