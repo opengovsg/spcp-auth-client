@@ -14,7 +14,7 @@ const client = new NDIAuthClient({
   idpLoginURL: '<the SingPass/CorpPass IDP url to redirect login attempts to>',
   idpEndpoint: '<the SingPass/CorpPass IDP url for out-of-band (OOB) authentication>',
   esrvcID: '<the e-service identifier registered with SingPass/CorpPass>',
-  appCert: '<not used - the e-service public certificate issued to SingPass/CorpPass>',
+  appCert: '<the e-service public certificate issued to SingPass/CorpPass>',
   appKey: '<the e-service certificate private key>',
   spcpCert: '<the public certificate of SingPass/CorpPass, for OOB authentication>',
 })
@@ -45,11 +45,30 @@ app.route('/assert', (req, res) => {
       res.cookie('login.error', err.message)
     } else {
       // Embed a session cookie or pass back some Authorization bearer token
-      res.cookie('connect.sid', ......)
+      const FOUR_HOURS = 4 * 60 * 60 * 1000
+      const jwt = client.createJWT(userName, FOUR_HOURS)
+      res.cookie('connect.sid', jwt)
     }
     res.redirect(relayState)
   })
 })
+
+// Verify if session has been authenticated with our JWT
+const isAuthenticated = (req, res, next) => {
+  client.verifyJWT(req.cookies['connect.sid'], (err, data) => {
+    if (err) {
+      res.status(400).send('Unauthorized')
+    } else {
+      req.userName = data.userName
+      next()
+    }
+  })
+}
+app.route(
+  '/protected-route',
+  isAuthenticated,
+  // ...
+)
 
 ```
 
