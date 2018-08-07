@@ -4,6 +4,7 @@ const DOMParser = require('xmldom').DOMParser
 const xmlEnc = require('xml-encryption')
 const request = require('request')
 const _ = require('lodash')
+const jwt = require('jsonwebtoken')
 
 /**
  * Helper class to assist authenication process with spcp servers
@@ -11,7 +12,15 @@ const _ = require('lodash')
 class NDIAuthClient {
   /**
    * Creates an instance of the class
+   * This instance will create and verify JSON Web Tokens (JWT) using RSA-256
    * @param  {Object} config - Configuration parameters for instance
+   * @param  {String} config.partnerEntityId - the partner entity id
+   * @param  {String} config.idpLoginURL - the fully-qualified SingPass/CorpPass IDP url to redirect login attempts to
+   * @param  {String} config.idpEndpoint - the fully-qualified SingPass/CorpPass IDP url for out-of-band (OOB) authentication
+   * @param  {String} config.esrvcID - the e-service identifier registered with SingPass/CorpPass
+   * @param  {String} config.appCert - the e-service public certificate issued to SingPass/CorpPass
+   * @param  {String} config.appKey - the e-service certificate private key
+   * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    */
   constructor (config) {
     const PARAMS = [
@@ -31,6 +40,7 @@ class NDIAuthClient {
         throw new Error(param + ' undefined')
       }
     }
+    this.jwtAlgorithm = 'RS256'
   }
 
   /**
@@ -54,6 +64,29 @@ class NDIAuthClient {
       '&esrvcID=' +
       this.esrvcID
     )
+  }
+
+  /**
+   * Creates a JSON Web Token (JWT) for a web session authenticated by NDI
+   * @param  {Object} payload - Payload to sign
+   * @param  {Integer} expiresIn - Length of jwt token
+   * @return {String} the created JWT
+   */
+  createJWT (payload, expiresIn) {
+    return jwt.sign(
+      payload,
+      this.appKey,
+      { expiresIn, algorithm: this.jwtAlgorithm }
+    )
+  }
+
+  /**
+   * Verifies a JWT for NDI-authenticated session
+   * @param  {String} jwtToken - The JWT to verify
+   * @param  {Function} callback - Callback called with decoded payload
+   */
+  verifyJWT (jwtToken, callback) {
+    jwt.verify(jwtToken, this.appCert, { algorithms: [this.jwtAlgorithm] }, callback)
   }
 
   /**

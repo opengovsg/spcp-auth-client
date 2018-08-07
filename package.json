@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/datagovsg/ndi-auth-client#readme",
   "dependencies": {
+    "jsonwebtoken": "^8.3.0",
     "lodash": "^4.17.10",
     "request": "^2.87.0",
     "xml-crypto": "^0.10.1",
