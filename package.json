@@ -1,14 +1,14 @@
 {
-  "name": "@opengovsg/ndi-auth-client",
+  "name": "@opengovsg/spcp-auth-client",
   "version": "1.0.0",
   "description": "Integrates SingPass and CorpPass into your node.js application",
-  "main": "NDIAuthClient.class.js",
+  "main": "SPCPAuthClient.class.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/datagovsg/ndi-auth-client.git"
+    "url": "git+https://github.com/datagovsg/spcp-auth-client.git"
   },
   "keywords": [
     "authentication",
@@ -18,9 +18,9 @@
   "author": "Government Technology Agency of Singapore (https://www.tech.gov.sg)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/datagovsg/ndi-auth-client/issues"
+    "url": "https://github.com/datagovsg/spcp-auth-client/issues"
   },
-  "homepage": "https://github.com/datagovsg/ndi-auth-client#readme",
+  "homepage": "https://github.com/datagovsg/spcp-auth-client#readme",
   "dependencies": {
     "jsonwebtoken": "^8.3.0",
     "lodash": "^4.17.10",

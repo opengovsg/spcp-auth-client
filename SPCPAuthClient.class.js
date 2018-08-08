@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken')
 /**
  * Helper class to assist authenication process with spcp servers
  */
-class NDIAuthClient {
+class SPCPAuthClient {
   /**
    * Creates an instance of the class
    * This instance will create and verify JSON Web Tokens (JWT) using RSA-256
@@ -67,7 +67,7 @@ class NDIAuthClient {
   }
 
   /**
-   * Creates a JSON Web Token (JWT) for a web session authenticated by NDI
+   * Creates a JSON Web Token (JWT) for a web session authenticated by SingPass/CorpPass
    * @param  {Object} payload - Payload to sign
    * @param  {Integer} expiresIn - Length of jwt token
    * @return {String} the created JWT
@@ -81,7 +81,7 @@ class NDIAuthClient {
   }
 
   /**
-   * Verifies a JWT for NDI-authenticated session
+   * Verifies a JWT for SingPass/CorpPass-authenticated session
    * @param  {String} jwtToken - The JWT to verify
    * @param  {Function} callback - Callback called with decoded payload
    */
@@ -325,4 +325,4 @@ class NDIAuthClient {
   }
 }
 
-module.exports = NDIAuthClient
+module.exports = SPCPAuthClient

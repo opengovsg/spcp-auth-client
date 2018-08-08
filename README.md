@@ -1,15 +1,14 @@
-# ndi-auth-client
+# spcp-auth-client
 
 A node.js library for SingPass and CorpPass, common authentication methods
-for the National Digital Identity (NDI) system of the Government Technology
-Agency of Singapore
+for public-facing government systems in Singapore
 
 ## Quick Start
 
 ```javascript
-const NDIAuthClient = require('ndi-auth-client')
+const SPCPAuthClient = require('spcp-auth-client')
 
-const client = new NDIAuthClient({
+const client = new SPCPAuthClient({
   partnerEntityId: '<your partner entity id>',
   idpLoginURL: '<the SingPass/CorpPass IDP url to redirect login attempts to>',
   idpEndpoint: '<the SingPass/CorpPass IDP url for out-of-band (OOB) authentication>',
@@ -41,7 +40,7 @@ app.route('/assert', (req, res) => {
     // In all cases, the relayState as provided in getUserName() is given
     const { userName, relayState } = data
     if (err) {
-      // Indicate through cookies or headers that an error has occurred
+      // Ispcpcate through cookies or headers that an error has occurred
       res.cookie('login.error', err.message)
     } else {
       // Embed a session cookie or pass back some Authorization bearer token
