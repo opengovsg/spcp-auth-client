@@ -40,7 +40,7 @@ app.route('/assert', (req, res) => {
     // In all cases, the relayState as provided in getUserName() is given
     const { userName, relayState } = data
     if (err) {
-      // Ispcpcate through cookies or headers that an error has occurred
+      // Indicate through cookies or headers that an error has occurred
       res.cookie('login.error', err.message)
     } else {
       // Embed a session cookie or pass back some Authorization bearer token
