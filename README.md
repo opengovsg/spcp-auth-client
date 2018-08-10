@@ -6,7 +6,7 @@ for public-facing government systems in Singapore
 ## Quick Start
 
 ```javascript
-const SPCPAuthClient = require('spcp-auth-client')
+const SPCPAuthClient = require('@opengovsg/spcp-auth-client')
 
 const client = new SPCPAuthClient({
   partnerEntityId: '<your partner entity id>',
