@@ -69,7 +69,7 @@ class SPCPAuthClient {
   /**
    * Creates a JSON Web Token (JWT) for a web session authenticated by SingPass/CorpPass
    * @param  {Object} payload - Payload to sign
-   * @param  {Integer} expiresIn - Length of jwt token
+   * @param  {(String|Integer)} expiresIn - The lifetime of the jwt token, fed to jsonwebtoken
    * @return {String} the created JWT
    */
   createJWT (payload, expiresIn) {
