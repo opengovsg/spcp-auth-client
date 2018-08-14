@@ -4,7 +4,7 @@
   "description": "Integrates SingPass and CorpPass into your node.js application",
   "main": "SPCPAuthClient.class.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nyc --source-map --produce-source-map mocha test --require=source-map-support/register"
   },
   "repository": {
     "type": "git",
