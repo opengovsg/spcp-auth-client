@@ -183,7 +183,7 @@ class SPCPAuthClient {
       return { isVerified, verificationError }
     }
 
-    isVerified = sig0 & sig1
+    isVerified = sig0 && sig1
     return { isVerified, verificationError }
   }
 
