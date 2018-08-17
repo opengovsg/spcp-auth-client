@@ -46,9 +46,10 @@ class SPCPAuthClient {
   /**
    * Generates redirect URL to Official SPCP log-in page
    * @param  {String} target - State to pass SPCP
+   * @param  {String} esrvcID - Optional e-service Id
    * @return {String} redirectURL - SPCP page to redirect to
    */
-  createRedirectURL (target) {
+  createRedirectURL (target, esrvcID) {
     if (!target) {
       return new Error('Target undefined')
     }
@@ -62,7 +63,7 @@ class SPCPAuthClient {
       encodeURI(target) +
       '&NameIdFormat=Email' +
       '&esrvcID=' +
-      this.esrvcID
+      (esrvcID || this.esrvcID)
     )
   }
 
