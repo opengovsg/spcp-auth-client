@@ -138,10 +138,9 @@ class SPCPAuthClient {
   /**
    * Verifies signatures in artifact response from SPCP based on public key of SPCP
    * @param  {String} xml - Artifact Response from SPCP
-   * @param  {Array} signatures - Array of signatures extracted from artifact response
    * @return {Boolean} sig0 - Boolean value of whether signatures in artifact response are verified
    */
-  verifyXML (xml, signatures) {
+  verifyXML (xml) {
     /**
      * Creates KeyInfo function
      * @param  {String} key - Public key of SPCP
@@ -151,6 +150,11 @@ class SPCPAuthClient {
         return key
       }
     }
+
+    let signatures = xpath.select(
+      "//*[local-name(.)='Signature']",
+      new xmldom.DOMParser().parseFromString(xml)
+    )
 
     let verifier
     let sig0
@@ -292,16 +296,7 @@ class SPCPAuthClient {
             callback(nestedError, { relayState })
           } else {
             // Step 4: Verify Artifact Response
-            let responseXML = body
-            let responseDOM = new xmldom.DOMParser().parseFromString(responseXML)
-            let signatures = xpath.select(
-              "//*[local-name(.)='Signature']",
-              responseDOM
-            )
-            const { isVerified, verificationError } = this.verifyXML(
-              responseXML,
-              signatures
-            )
+            const { isVerified, verificationError } = this.verifyXML(body)
             if (!isVerified) {
               const nestedError = this.makeNestedError(
                 'Error in Step 4: Verify Artifact Response',
@@ -312,7 +307,7 @@ class SPCPAuthClient {
               // Step 5: Decrypt Artifact Response
               let encryptedData = xpath.select(
                 "//*[local-name(.)='EncryptedData']",
-                responseDOM
+                new xmldom.DOMParser().parseFromString(body)
               )
               const { userName, decryptionError } = this.decryptXML(encryptedData)
               if (userName) {
