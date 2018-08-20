@@ -106,14 +106,7 @@ describe('SPCPAuthClient - Signature Tests', () => {
       signatureTargets.response
     )
 
-    let signatures = xpath.select(
-      "//*[local-name(.)='Signature']",
-      dom(signedPackage)
-    )
-    const { isVerified, verificationError } = authClient.verifyXML(
-      signedPackage,
-      signatures
-    )
+    const { isVerified, verificationError } = authClient.verifyXML(signedPackage)
     expect(isVerified).to.equal(null)
     expect(verificationError).to.equal('Artifact Response must contain 2 signatures')
   })
@@ -127,14 +120,7 @@ describe('SPCPAuthClient - Signature Tests', () => {
       signatureTargets.assertion
     )
 
-    let signatures = xpath.select(
-      "//*[local-name(.)='Signature']",
-      dom(signedPackage)
-    )
-    const { isVerified, verificationError } = authClient.verifyXML(
-      signedPackage,
-      signatures
-    )
+    const { isVerified, verificationError } = authClient.verifyXML(signedPackage)
     expect(isVerified).to.equal(null)
     expect(verificationError).to.not.equal(null)
   })
@@ -170,14 +156,7 @@ describe('SPCPAuthClient - Signature Tests', () => {
         signatureTargets.assertion
       )
 
-      let signatures = xpath.select(
-        "//*[local-name(.)='Signature']",
-        dom(signedPackage)
-      )
-      const { isVerified, verificationError } = authClient.verifyXML(
-        signedPackage,
-        signatures
-      )
+      const { isVerified, verificationError } = authClient.verifyXML(signedPackage)
       expect(isVerified).to.equal(null)
       expect(stubbedSignedXml.loadSignature.calledTwice).to.equal(true)
       expect(verificationError).to.equal(error)
@@ -199,15 +178,8 @@ describe('SPCPAuthClient - Signature Tests', () => {
         signatureTargets.assertion
       )
 
-      let signatures = xpath.select(
-        "//*[local-name(.)='Signature']",
-        dom(signedPackage)
-      )
-      const { isVerified, verificationError } = authClient.verifyXML(
-        signedPackage,
-        signatures
-      )
-      expect(isVerified).to.equal(true)
+      const { isVerified, verificationError } = authClient.verifyXML(signedPackage)
+      expect(isVerified, verificationError).to.equal(true)
       expect(stubbedSignedXml.loadSignature.calledTwice).to.equal(true)
       expect(stubbedSignedXml.checkSignature.calledTwice).to.equal(true)
       expect(verificationError).to.equal(null)
