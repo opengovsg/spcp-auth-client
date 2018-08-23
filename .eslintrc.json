@@ -1,5 +1,12 @@
 {
   "extends": [
     "@opengovsg/eslint-config-opengovsg"
-  ]
+  ],
+  "plugins": [
+    "mocha"
+  ],
+  "env": {
+    "mocha": true,
+    "node": true
+  }
 }
