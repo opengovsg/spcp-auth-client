@@ -4,7 +4,9 @@
   "description": "Integrates SingPass and CorpPass into your node.js application",
   "main": "SPCPAuthClient.class.js",
   "scripts": {
-    "test": "nyc --source-map --produce-source-map mocha test --require=source-map-support/register"
+    "test": "nyc --source-map --produce-source-map mocha test --require=source-map-support/register",
+    "lint": "eslint --ext .js --ignore-path .gitignore --fix .",
+    "ci-lint": "eslint --ext .js --ignore-path .gitignore --max-warnings 0 ."
   },
   "repository": {
     "type": "git",
