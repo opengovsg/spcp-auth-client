@@ -16,6 +16,7 @@ const client = new SPCPAuthClient({
   appCert: '<the e-service public certificate issued to SingPass/CorpPass>',
   appKey: '<the e-service certificate private key>',
   spcpCert: '<the public certificate of SingPass/CorpPass, for OOB authentication>',
+  userNameXPath: '<custom XPath or SPCPAuthClient.xpaths.CORPPASS_UEN or SPCPAuthClient.xpaths.SINGPASS_NRIC (default)>',
 })
 
 const express = require('express')
