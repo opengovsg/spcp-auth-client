@@ -314,7 +314,7 @@ class SPCPAuthClient {
 // XPaths for extracting userName from Artifact Response
 SPCPAuthClient.xpaths = {
   CORPPASS_UEN: "string(//*[local-name(.)='Attribute']/@Name)",
-  SINGPASS_NRIC: "string(//*[local-name(.)='Attribute'][@Name='UserName'])",
+  SINGPASS_NRIC: "string(//*[local-name(.)='Attribute'][@Name='UserName']/*[local-name(.)='AttributeValue'])",
 }
 
 module.exports = SPCPAuthClient
