@@ -3,7 +3,6 @@ const xpath = require('xpath')
 const xmldom = require('xmldom')
 const xmlEnc = require('xml-encryption')
 const request = require('request')
-const _ = require('lodash')
 const jwt = require('jsonwebtoken')
 
 /**
@@ -40,6 +39,8 @@ class SPCPAuthClient {
         throw new Error(param + ' undefined')
       }
     }
+    this.userNameXmlPath = config.userNameXmlPath
+    || "string(//*[local-name(.)='Attribute'][@Name='UserName'])"
     this.jwtAlgorithm = 'RS256'
   }
 
@@ -197,36 +198,19 @@ class SPCPAuthClient {
    * @return {String} username - Decrypted username from encrypted data
    */
   decryptXML (encryptedData) {
-    let decryptedData
-    let userName = null
-    let decryptionError = null
-    let options = {
+    return xmlEnc.decrypt(encryptedData, {
       key: this.appKey,
-    }
-
-    // TODO: do not mutate input variables; have separate variables for each decrypted thing
-    xmlEnc.decrypt(encryptedData.toString(), options, function (err, result) {
+    }, (err, decryptedData) => {
+      let userName = null
+      let decryptionError = null
       if (err) {
         decryptionError = err
-        return { userName, decryptionError }
       } else {
-        decryptedData = new xmldom.DOMParser().parseFromString(result)
-        encryptedData = xpath.select(
-          "//*[local-name(.)='EncryptedData']",
-          decryptedData
-        )
+        userName = xpath.select(this.userNameXmlPath, 
+          new xmldom.DOMParser().parseFromString(decryptedData))
       }
-      xmlEnc.decrypt(encryptedData.toString(), options, function (err, result) {
-        if (err) {
-          decryptionError = err
-          return { userName, decryptionError }
-        } else {
-          decryptedData = new xmldom.DOMParser().parseFromString(result)
-          userName = _.get(decryptedData, ['documentElement', 'childNodes', '0', 'data'], null)
-        }
-      })
+      return { userName, decryptionError }
     })
-    return { userName, decryptionError }
   }
 
   /**
@@ -308,7 +292,7 @@ class SPCPAuthClient {
               let encryptedData = xpath.select(
                 "//*[local-name(.)='EncryptedData']",
                 new xmldom.DOMParser().parseFromString(body)
-              )
+              ).toString()
               const { userName, decryptionError } = this.decryptXML(encryptedData)
               if (userName) {
                 callback(null, { userName, relayState })
