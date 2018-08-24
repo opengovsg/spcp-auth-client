@@ -20,6 +20,7 @@ class SPCPAuthClient {
    * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass
    * @param  {(String|Buffer)} config.appKey - the e-service certificate private key
    * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
+   * @param  {String} config.userNameXPath - Optional XPath for extracting userName from Artifact Response
    */
   constructor (config) {
     const PARAMS = [
@@ -39,8 +40,7 @@ class SPCPAuthClient {
         throw new Error(param + ' undefined')
       }
     }
-    this.userNameXmlPath = config.userNameXmlPath
-    || "string(//*[local-name(.)='Attribute'][@Name='UserName'])"
+    this.userNameXPath = config.userNameXPath || SPCPAuthClient.xpaths.SINGPASS_NRIC
     this.jwtAlgorithm = 'RS256'
   }
 
@@ -206,7 +206,7 @@ class SPCPAuthClient {
       if (err) {
         decryptionError = err
       } else {
-        userName = xpath.select(this.userNameXmlPath, 
+        userName = xpath.select(this.userNameXPath,
           new xmldom.DOMParser().parseFromString(decryptedData))
       }
       return { userName, decryptionError }
@@ -309,6 +309,12 @@ class SPCPAuthClient {
       }
     }
   }
+}
+
+// XPaths for extracting userName from Artifact Response
+SPCPAuthClient.xpaths = {
+  CORPPASS_UEN: "string(//*[local-name(.)='Attribute']/@Name)",
+  SINGPASS_NRIC: "string(//*[local-name(.)='Attribute'][@Name='UserName'])",
 }
 
 module.exports = SPCPAuthClient
