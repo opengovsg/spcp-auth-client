@@ -82,13 +82,15 @@ What the attributes actually are depends on the identity provider:
  * SingPass will return the user's NRIC as the UserName attribute 
    (this is even if the user has a non-NRIC login id)
  * CorpPass will return an attribute whose name is the UEN of the
-   corporate entity, and whose value is an encrypted payload the
-   contents of which we have yet to determine
+   corporate entity, and whose value is a base64-encoded payload of
+   an XML document whose structure is defined in Section 4.4.3 of the 
+   CorpPass Interface Specification v1.5
 
 This package is a very lightweight implementation of the above, written after 
 failing to find an npm package that supports artifact binding. It is meant for 
 those who are solely focused on using SingPass or CorpPass as a sign-in mechanism, 
-without being too concerned about other SAML 2.0 features. 
+solely to retrieve either the NRIC or UEN, without being too concerned about 
+other SAML 2.0 features. 
 
 More full-fledged SAML 2.0 implementations for node.js include:
 
