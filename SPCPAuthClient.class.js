@@ -1,9 +1,11 @@
+const base64 = require('base-64')
+const jwt = require('jsonwebtoken')
+const request = require('request')
 const xmlCrypto = require('xml-crypto')
-const xpath = require('xpath')
+const { xml2json } = require('xml2json-light')
 const xmldom = require('xmldom')
 const xmlEnc = require('xml-encryption')
-const request = require('request')
-const jwt = require('jsonwebtoken')
+const xpath = require('xpath')
 
 /**
  * Helper class to assist authenication process with spcp servers
@@ -20,7 +22,7 @@ class SPCPAuthClient {
    * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass
    * @param  {(String|Buffer)} config.appKey - the e-service certificate private key
    * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
-   * @param  {String} config.userNameXPath - Optional XPath for extracting userName from Artifact Response
+   * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
   constructor (config) {
     const PARAMS = [
@@ -40,7 +42,7 @@ class SPCPAuthClient {
         throw new Error(param + ' undefined')
       }
     }
-    this.userNameXPath = config.userNameXPath || SPCPAuthClient.xpaths.SINGPASS_NRIC
+    this.extract = config.extract || SPCPAuthClient.extract.SINGPASS
     this.jwtAlgorithm = 'RS256'
   }
 
@@ -195,21 +197,22 @@ class SPCPAuthClient {
   /**
    * Decrypts encrypted data in artifact response from SPCP based on app private key
    * @param  {String} encryptedData - Encrypted data in artifact response from SPCP
-   * @return {String} username - Decrypted username from encrypted data
+   * @return {Object} a k-v map of attributes obtained from the artifact
    */
   decryptXML (encryptedData) {
     return xmlEnc.decrypt(encryptedData, {
       key: this.appKey,
     }, (err, decryptedData) => {
-      let userName = null
+      let attributes = null
       let decryptionError = null
       if (err) {
         decryptionError = err
       } else {
-        userName = xpath.select(this.userNameXPath,
+        const attributeElements = xpath.select(`//*[local-name(.)='Attribute']`,
           new xmldom.DOMParser().parseFromString(decryptedData))
+        attributes = this.extract(attributeElements)
       }
-      return { userName, decryptionError }
+      return { attributes, decryptionError }
     })
   }
 
@@ -231,7 +234,7 @@ class SPCPAuthClient {
    * @param  {String} relayState - State passed in on intial spcp redirect
    * @param {Function} callback - Callback function with inputs error and UserName
    */
-  getUserName (samlArt, relayState, callback) {
+  getAttributes (samlArt, relayState, callback) {
     // Step 1: Check if relay state present
     if (!samlArt || !relayState) {
       callback(
@@ -293,9 +296,9 @@ class SPCPAuthClient {
                 "//*[local-name(.)='EncryptedData']",
                 new xmldom.DOMParser().parseFromString(body)
               ).toString()
-              const { userName, decryptionError } = this.decryptXML(encryptedData)
-              if (userName) {
-                callback(null, { userName, relayState })
+              const { attributes, decryptionError } = this.decryptXML(encryptedData)
+              if (attributes) {
+                callback(null, { attributes, relayState })
               } else {
                 const nestedError = this.makeNestedError(
                   'Error in Step 5: Decrypt Artifact Response',
@@ -311,10 +314,21 @@ class SPCPAuthClient {
   }
 }
 
-// XPaths for extracting userName from Artifact Response
-SPCPAuthClient.xpaths = {
-  CORPPASS_UEN: "string(//*[local-name(.)='Attribute']/@Name)",
-  SINGPASS_NRIC: "string(//*[local-name(.)='Attribute'][@Name='UserName']/*[local-name(.)='AttributeValue'])",
+// Functions for extracting attributes from Artifact Response
+SPCPAuthClient.extract = {
+  CORPPASS: ([element]) => {
+    const cpXMLBase64 = xpath.select(`string(./*[local-name(.)='AttributeValue'])`, element)
+    return xml2json(base64.decode(cpXMLBase64))
+  },
+  SINGPASS: attributeElements => attributeElements.reduce(
+    (attributes, element) => {
+      const key = xpath.select('string(./@Name)', element)
+      const value = xpath.select(`string(./*[local-name(.)='AttributeValue'])`, element)
+      attributes[key] = value
+      return attributes
+    },
+    {}
+  ),
 }
 
 module.exports = SPCPAuthClient
