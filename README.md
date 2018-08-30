@@ -16,7 +16,7 @@ const client = new SPCPAuthClient({
   appCert: '<the e-service public certificate issued to SingPass/CorpPass>',
   appKey: '<the e-service certificate private key>',
   spcpCert: '<the public certificate of SingPass/CorpPass, for OOB authentication>',
-  userNameXPath: '<custom XPath or SPCPAuthClient.xpaths.{CORPPASS_UEN or SINGPASS_NRIC (default)}>',
+  extract: '<custom fn or SPCPAuthClient.extract.CORPPASS or SPCPAuthClient.extract.SINGPASS (default)>',
 })
 
 const express = require('express')
@@ -72,36 +72,36 @@ app.route(
 
 ```
 ## About SingPass/CorpPass and this package
-SingPass and CorpPass are identity providers to provide a single set of login 
-credentials for Singapore residents and Singapore-based corporate entities 
-respectively. They are both based on [SAML 2.0](https://en.wikipedia.org/wiki/SAML_2.0), 
-and interact with service providers through HTTP Artifact Binding. The artifact returned 
+SingPass and CorpPass are identity providers to provide a single set of login
+credentials for Singapore residents and Singapore-based corporate entities
+respectively. They are both based on [SAML 2.0](https://en.wikipedia.org/wiki/SAML_2.0),
+and interact with service providers through HTTP Artifact Binding. The artifact returned
 by the identity provider is a SAML Assertion consisting of attributes concerning the user.
 
 What the attributes actually are depends on the identity provider:
- * SingPass will return the user's NRIC as the UserName attribute 
+ * SingPass will return the user's NRIC as the UserName attribute
    (this is even if the user has a non-NRIC login id)
  * CorpPass will return an attribute whose name is the UEN of the
    corporate entity, and whose value is a base64-encoded payload of
-   an XML document whose structure is defined in Section 4.4.3 of the 
+   an XML document whose structure is defined in Section 4.4.3 of the
    CorpPass Interface Specification v1.5
 
-This package is a very lightweight implementation of the above, written after 
-failing to find an npm package that supports artifact binding. It is meant for 
-those who are solely focused on using SingPass or CorpPass as a sign-in mechanism, 
-solely to retrieve either the NRIC or UEN, without being too concerned about 
-other SAML 2.0 features. 
+This package is a very lightweight implementation of the above, written after
+failing to find an npm package that supports artifact binding. It is meant for
+those who are solely focused on using SingPass or CorpPass as a sign-in mechanism,
+solely to retrieve the contents of the SAML AttributeStatement, without being
+too concerned about other SAML 2.0 features.
 
 More full-fledged SAML 2.0 implementations for node.js include:
 
- * @socialtables/saml-protocol 
-   ([GitHub](https://github.com/socialtables/saml-protocol), [npm](https://www.npmjs.com/package/@socialtables/saml-protocol)) - 
+ * @socialtables/saml-protocol
+   ([GitHub](https://github.com/socialtables/saml-protocol), [npm](https://www.npmjs.com/package/@socialtables/saml-protocol)) -
    a [port](https://medium.com/social-tables-tech/why-we-wrote-yet-another-saml-library-f79dfd8d8ddd) of the Java-based Spring-Security-SAML
- * saml2-js 
-   ([GitHub](https://github.com/Clever/saml2), [npm](https://www.npmjs.com/package/saml2-js)) - 
+ * saml2-js
+   ([GitHub](https://github.com/Clever/saml2), [npm](https://www.npmjs.com/package/saml2-js)) -
    CoffeeScript implementation from [Clever](https://www.clever.com)
 
-Note that these do not have HTTP Artifact Binding at time of writing, 
+Note that these do not have HTTP Artifact Binding at time of writing,
 but would probably accept pull requests
 
 ## Contributing
