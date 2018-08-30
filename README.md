@@ -37,9 +37,12 @@ app.route('/login', (req, res) => {
 app.route('/assert', (req, res) => {
   const { SAMLArt: samlArt, RelayState: relayState } = req.query
   client.getUserName(samlArt, relayState, (err, data) => {
-    // If all is well and login occurs, the userName string is given
+    // If all is well and login occurs, the attributes are given
     // In all cases, the relayState as provided in getUserName() is given
-    const { userName, relayState } = data
+    const { attributes, relayState } = data
+    // For SingPass, a user name will be given
+    // Refer to unit tests to infer what CorpPass will give
+    const { UserName: userName } = attributes
     if (err) {
       // Indicate through cookies or headers that an error has occurred
       res.cookie('login.error', err.message)
