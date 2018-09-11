@@ -125,64 +125,32 @@ describe('SPCPAuthClient - Signature Tests', () => {
     expect(verificationError).to.not.equal(null)
   })
 
-  describe('Tests involving mocks', () => {
-    const sinon = require('sinon')
+  it('should reject responses doubly signed by SingPass/CorpPass with bad assertion signature ', () => {
+    const signedPackage = prepareSignedXml(
+      response,
+      signatureTargets.assertion,
+      signatureTargets.response
+    )
 
-    afterEach(() => {
-      if (typeof xmlCrypto.SignedXml.restore === 'function') {
-        xmlCrypto.SignedXml.restore()
-      }
-    })
+    const signatureValue = xpath.select(
+      "string(//*[local-name(.)='Assertion']/*[local-name(.)='Signature']/*[local-name(.)='SignatureValue'])",
+      dom(signedPackage)
+    )
 
-    it('should reject responses doubly signed by SingPass/CorpPass with bad assertion signature ', () => {
-      const error = new Error()
-      const stubbedSignedXml = {
-        loadSignature: sinon.spy(),
-        checkSignature: sinon.stub(),
-      }
-      sinon.stub(xmlCrypto, 'SignedXml').callsFake(() => stubbedSignedXml)
-      stubbedSignedXml.checkSignature
-        .onFirstCall().returns(true)
-        .onSecondCall().callsFake(() => {
-          stubbedSignedXml.validationErrors = error
-          return false
-        })
+    const tamperedPackage = signedPackage.replace(signatureValue, 'tampered')
+    const { isVerified, verificationError } = authClient.verifyXML(tamperedPackage)
+    expect(isVerified).to.equal(null)
+    expect(verificationError).to.not.equal(null)
+  })
 
-      // HACK: Create a dud two-signature payload using the only method
-      // that xml-crypto allows
-      const signedPackage = prepareSignedXml(
-        response,
-        signatureTargets.response,
-        signatureTargets.assertion
-      )
+  it('should accept responses doubly signed by SingPass/CorpPass', () => {
+    const signedPackage = prepareSignedXml(
+      response,
+      signatureTargets.assertion,
+      signatureTargets.response
+    )
 
-      const { isVerified, verificationError } = authClient.verifyXML(signedPackage)
-      expect(isVerified).to.equal(null)
-      expect(stubbedSignedXml.loadSignature.calledTwice).to.equal(true)
-      expect(verificationError).to.equal(error)
-    })
-
-    it('should accept responses doubly signed by SingPass/CorpPass', () => {
-      const stubbedSignedXml = {
-        loadSignature: sinon.spy(),
-        checkSignature: sinon.stub(),
-      }
-      sinon.stub(xmlCrypto, 'SignedXml').callsFake(() => stubbedSignedXml)
-      stubbedSignedXml.checkSignature.returns(true)
-
-      // HACK: Create a dud two-signature payload using the only method
-      // that xml-crypto allows
-      const signedPackage = prepareSignedXml(
-        response,
-        signatureTargets.response,
-        signatureTargets.assertion
-      )
-
-      const { isVerified, verificationError } = authClient.verifyXML(signedPackage)
-      expect(isVerified, verificationError).to.equal(true)
-      expect(stubbedSignedXml.loadSignature.calledTwice).to.equal(true)
-      expect(stubbedSignedXml.checkSignature.calledTwice).to.equal(true)
-      expect(verificationError).to.equal(null)
-    })
+    const { isVerified, verificationError } = authClient.verifyXML(signedPackage)
+    expect(isVerified, verificationError).to.equal(true)
   })
 })
