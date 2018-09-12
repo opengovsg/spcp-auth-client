@@ -244,7 +244,7 @@ class SPCPAuthClient {
     } else {
       // Step 2: Form Artifact Resolve with Artifact and Sign
       const xml =
-        '<samlp:ArtifactResolve xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"' +
+        '<samlp:ArtifactResolve xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ' +
         'xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"' +
         ' Destination="' +
         this.idpEndpoint +
