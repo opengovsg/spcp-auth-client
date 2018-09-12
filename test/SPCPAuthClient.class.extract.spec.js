@@ -1,32 +1,28 @@
-const { expect } = require('chai')
 const base64 = require('base-64')
+const { expect } = require('chai')
+const fs = require('fs')
+const { render } = require('mustache')
 const xpath = require('xpath')
 const xmldom = require('xmldom')
 
 const { extract: { SINGPASS: singPass, CORPPASS: corpPass } } = require('../SPCPAuthClient.class')
 
 describe('SPCPAuthClient.extract - Attributes Extract Tests', () => {
-  it('should correctly return SingPass attributes', () => {
-    const expected = {
-      UserName: 'S1234567A',
-      MobileNumber: '91234567',
-    }
-    const attributeStatementString = `
-      <AttributeStatement>
-        <Attribute Name="UserName">
-          <AttributeValue>${expected.UserName}</AttributeValue>
-        </Attribute>
-        <Attribute Name="MobileNumber">
-          <AttributeValue>${expected.MobileNumber}</AttributeValue>
-        </Attribute>
-      </AttributeStatement>
-    `
-    const attributeElements = xpath.select(
-      `//*[local-name(.)='Attribute']`,
-      new xmldom.DOMParser().parseFromString(attributeStatementString)
-    )
+  const TEMPLATE = fs.readFileSync(
+    './test/fixtures/saml/unsigned-assertion.xml', 'utf8'
+  )
 
-    expect(singPass(attributeElements)).to.eql(expected)
+  const attributes = input => {
+    const assertion = render(TEMPLATE, input)
+    return xpath.select(
+      `//*[local-name(.)='Attribute']`,
+      new xmldom.DOMParser().parseFromString(assertion)
+    )
+  }
+
+  it('should correctly return SingPass attributes', () => {
+    const input = { name: 'UserName', value: 'S1234567A' }
+    expect(singPass(attributes(input))).to.eql({ UserName: 'S1234567A' })
   })
 
   it('should correctly return CorpPass attributes', () => {
@@ -56,17 +52,7 @@ describe('SPCPAuthClient.extract - Attributes Extract Tests', () => {
         </Result_Set>
       </AuthAccess>
     `
-    const attributeStatementString = `
-      <AttributeStatement>
-        <Attribute Name="${entityId}">
-          <AttributeValue>${base64.encode(corpPassXMLString)}</AttributeValue>
-        </Attribute>
-      </AttributeStatement>
-    `
-    const attributeElements = xpath.select(
-      `//*[local-name(.)='Attribute']`,
-      new xmldom.DOMParser().parseFromString(attributeStatementString)
-    )
+    const input = { name: entityId, value: base64.encode(corpPassXMLString) }
 
     const expected = {
       UserInfo: {
@@ -91,6 +77,6 @@ describe('SPCPAuthClient.extract - Attributes Extract Tests', () => {
         },
       },
     }
-    expect(corpPass(attributeElements)).to.eql(expected)
+    expect(corpPass(attributes(input))).to.eql(expected)
   })
 })

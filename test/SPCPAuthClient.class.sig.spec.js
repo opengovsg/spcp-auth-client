@@ -1,5 +1,6 @@
 const { expect } = require('chai')
 const fs = require('fs')
+const { render } = require('mustache')
 const xmlCrypto = require('xml-crypto')
 const xpath = require('xpath')
 const { DOMParser } = require('xmldom')
@@ -20,8 +21,17 @@ describe('SPCPAuthClient - Signature Tests', () => {
   })
 
   const artifact = '<ArtifactResolve>value</ArtifactResolve>'
-  const response = fs.readFileSync(
-    './test/fixtures/saml/unsigned-response.xml', 'utf8'
+  const assertion = render(
+    fs.readFileSync(
+      './test/fixtures/saml/unsigned-assertion.xml', 'utf8'
+    ),
+    { name: 'UserName', value: 'S1234567A' }
+  )
+  const response = render(
+    fs.readFileSync(
+      './test/fixtures/saml/unsigned-response.xml', 'utf8'
+    ),
+    { assertion }
   )
 
   const signatureTargets = {
