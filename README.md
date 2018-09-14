@@ -36,9 +36,9 @@ app.route('/login', (req, res) => {
 // identity using out-of-band (OOB) authentication
 app.route('/assert', (req, res) => {
   const { SAMLArt: samlArt, RelayState: relayState } = req.query
-  client.getUserName(samlArt, relayState, (err, data) => {
+  client.getAttributes(samlArt, relayState, (err, data) => {
     // If all is well and login occurs, the attributes are given
-    // In all cases, the relayState as provided in getUserName() is given
+    // In all cases, the relayState as provided in getAttributes() is given
     const { attributes, relayState } = data
     // For SingPass, a user name will be given
     // Refer to unit tests to infer what CorpPass will give
