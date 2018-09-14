@@ -49,7 +49,7 @@ app.route('/assert', (req, res) => {
     } else {
       // Embed a session cookie or pass back some Authorization bearer token
       const FOUR_HOURS = 4 * 60 * 60 * 1000
-      const jwt = client.createJWT(userName, FOUR_HOURS)
+      const jwt = client.createJWT({ userName }, FOUR_HOURS)
       res.cookie('connect.sid', jwt)
     }
     res.redirect(relayState)
