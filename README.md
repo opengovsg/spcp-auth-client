@@ -35,18 +35,19 @@ app.route('/login', (req, res) => {
 // by GET-ing a pre-agreed endpoint, proceed to obtain the user's
 // identity using out-of-band (OOB) authentication
 app.route('/assert', (req, res) => {
-  const { SAMLArt: samlArt, RelayState: relayState } = req.query
+  const { SAMLart: samlArt, RelayState: relayState } = req.query
   client.getAttributes(samlArt, relayState, (err, data) => {
     // If all is well and login occurs, the attributes are given
     // In all cases, the relayState as provided in getAttributes() is given
     const { attributes, relayState } = data
-    // For SingPass, a user name will be given
-    // Refer to unit tests to infer what CorpPass will give
-    const { UserName: userName } = attributes
     if (err) {
       // Indicate through cookies or headers that an error has occurred
+      console.error(err)
       res.cookie('login.error', err.message)
     } else {
+      // For SingPass, a user `name will be given
+      // Refer to unit tests to infer what CorpPass will give
+      const { UserName: userName } = attributes
       // Embed a session cookie or pass back some Authorization bearer token
       const FOUR_HOURS = 4 * 60 * 60 * 1000
       const jwt = client.createJWT({ userName }, FOUR_HOURS)
