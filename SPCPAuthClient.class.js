@@ -19,8 +19,9 @@ class SPCPAuthClient {
    * @param  {String} config.idpLoginURL - the fully-qualified SingPass/CorpPass IDP url to redirect login attempts to
    * @param  {String} config.idpEndpoint - the fully-qualified SingPass/CorpPass IDP url for out-of-band (OOB) authentication
    * @param  {String} config.esrvcID - the e-service identifier registered with SingPass/CorpPass
-   * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass
-   * @param  {(String|Buffer)} config.appKey - the e-service certificate private key
+   * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass and for JWT verification
+   * @param  {(String|Buffer)} config.appSigningKey - the e-service certificate private key used for signature verification and JWT creation
+   * @param  {(String|Buffer)} config.appEncryptionKey - the e-service private key used decrypt  artifact response from SPCP
    * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
@@ -29,7 +30,8 @@ class SPCPAuthClient {
       'partnerEntityId',
       'idpEndpoint',
       'idpLoginURL',
-      'appKey',
+      'appSigningKey',
+      'appEncryptionKey',
       'appCert',
       'spcpCert',
       'esrvcID',
@@ -79,7 +81,7 @@ class SPCPAuthClient {
   createJWT (payload, expiresIn) {
     return jwt.sign(
       payload,
-      this.appKey,
+      this.appSigningKey,
       { expiresIn, algorithm: this.jwtAlgorithm }
     )
   }
@@ -115,7 +117,7 @@ class SPCPAuthClient {
     let xpath = "//*[local-name(.)='ArtifactResolve']"
     sig.addReference(xpath, transforms, digestAlgorithm)
 
-    sig.signingKey = this.appKey
+    sig.signingKey = this.appSigningKey
     sig.signatureAlgorithm = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
 
     let artifactResolve = null
@@ -201,7 +203,7 @@ class SPCPAuthClient {
    */
   decryptXML (encryptedData) {
     return xmlEnc.decrypt(encryptedData, {
-      key: this.appKey,
+      key: this.appEncryptionKey,
     }, (err, decryptedData) => {
       let attributes = null
       let decryptionError = null

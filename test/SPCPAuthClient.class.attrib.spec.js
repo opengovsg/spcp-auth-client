@@ -15,7 +15,8 @@ describe('SPCPAuthClient - getAttributes', () => {
     partnerEntityId: 'partnerEntityId',
     idpEndpoint: 'idpEndpoint',
     idpLoginURL: 'idpLoginURL',
-    appKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
+    appSigningKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
+    appEncryptionKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
     appCert: 'appCert',
     spcpCert: fs.readFileSync('./test/fixtures/certs/spcp.crt'),
     esrvcID: 'esrvcID',
@@ -175,7 +176,7 @@ describe('SPCPAuthClient - getAttributes', () => {
     })
     const decryptionError = new Error('decrypt')
     sinon.stub(xmlEnc, 'decrypt').callsFake((data, options, callback) => {
-      expect(options.key).to.equal(authClient.appKey)
+      expect(options.key).to.equal(authClient.appEncryptionKey)
       return callback(decryptionError)
     })
     try {
