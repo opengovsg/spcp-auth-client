@@ -9,7 +9,8 @@ describe('SPCPAuthClient - Constructor Tests', () => {
       partnerEntityId: 'partnerEntityId',
       idpEndpoint: 'idpEndpoint',
       idpLoginURL: 'idpLoginURL',
-      appKey: 'appKey',
+      appSigningKey: 'appSigningKey',
+      appEncryptionKey: 'appEncryptionKey',
       appCert: 'appCert',
       spcpCert: 'spcpCert',
       esrvcID: 'esrvcID',
@@ -22,7 +23,8 @@ describe('SPCPAuthClient - Constructor Tests', () => {
     expect(makeClientWithout('partnerEntityId')).to.throw(Error)
     expect(makeClientWithout('idpEndpoint')).to.throw(Error)
     expect(makeClientWithout('idpLoginURL')).to.throw(Error)
-    expect(makeClientWithout('appKey')).to.throw(Error)
+    expect(makeClientWithout('appSigningKey')).to.throw(Error)
+    expect(makeClientWithout('appEncryptionKey')).to.throw(Error)
     expect(makeClientWithout('appCert')).to.throw(Error)
     expect(makeClientWithout('spcpCert')).to.throw(Error)
     expect(makeClientWithout('esrvcID')).to.throw(Error)
@@ -33,7 +35,8 @@ describe('SPCPAuthClient - Constructor Tests', () => {
       partnerEntityId: 'partnerEntityId',
       idpEndpoint: 'idpEndpoint',
       idpLoginURL: 'idpLoginURL',
-      appKey: 'appKey',
+      appSigningKey: 'appSigningKey',
+      appEncryptionKey: 'appEncryptionKey',
       appCert: 'appCert',
       spcpCert: 'spcpCert',
       esrvcID: 'esrvcID',
@@ -42,7 +45,8 @@ describe('SPCPAuthClient - Constructor Tests', () => {
     expect(authClient.partnerEntityId).to.equal(config.partnerEntityId)
     expect(authClient.idpEndpoint).to.equal(config.idpEndpoint)
     expect(authClient.idpLoginURL).to.equal(config.idpLoginURL)
-    expect(authClient.appKey).to.equal(config.appKey)
+    expect(authClient.appSigningKey).to.equal(config.appSigningKey)
+    expect(authClient.appEncryptionKey).to.equal(config.appEncryptionKey)
     expect(authClient.appCert).to.equal(config.appCert)
     expect(authClient.spcpCert).to.equal(config.spcpCert)
     expect(authClient.esrvcID).to.equal(config.esrvcID)
