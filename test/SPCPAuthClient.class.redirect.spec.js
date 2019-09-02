@@ -6,7 +6,7 @@ describe('SPCPAuthClient - createRedirectURL', () => {
     partnerEntityId: 'partnerEntityId',
     idpEndpoint: 'idpEndpoint',
     idpLoginURL: 'idpLoginURL',
-    appSigningKey: 'appSigningKey',
+    appKey: 'appKey',
     appEncryptionKey: 'appEncryptionKey',
     appCert: 'appCert',
     spcpCert: 'spcpCert',

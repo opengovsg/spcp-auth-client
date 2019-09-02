@@ -14,8 +14,8 @@ const client = new SPCPAuthClient({
   idpEndpoint: '<the SingPass/CorpPass IDP url for out-of-band (OOB) authentication>',
   esrvcID: '<the e-service identifier registered with SingPass/CorpPass>',
   appCert: '<the e-service public certificate issued to SingPass/CorpPass>',
-  appSigningKey: '<the e-service certificate private key>',
-  appEncryptionKey: '<the e-service certificate private key used for decrypting artifact response>',
+  appKey: '<the e-service certificate private key>',
+  appEncryptionKey: '<optional: the e-service certificate private key used for decrypting artifact response, if different from appKey>',
   spcpCert: '<the public certificate of SingPass/CorpPass, for OOB authentication>',
   extract: '<custom fn or SPCPAuthClient.extract.CORPPASS or SPCPAuthClient.extract.SINGPASS (default)>',
 })
@@ -46,7 +46,7 @@ app.route('/assert', (req, res) => {
       // If all is well and login occurs, the attributes are given
       // In all cases, the relayState as provided in getAttributes() is given
       const { attributes, relayState } = data
-  
+
       // For SingPass, a user `name will be given
       // Refer to unit tests to infer what CorpPass will give
       const { UserName: userName } = attributes

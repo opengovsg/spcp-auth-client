@@ -15,7 +15,7 @@ describe('SPCPAuthClient - getAttributes', () => {
     partnerEntityId: 'partnerEntityId',
     idpEndpoint: 'idpEndpoint',
     idpLoginURL: 'idpLoginURL',
-    appSigningKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
+    appKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
     appEncryptionKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
     appCert: 'appCert',
     spcpCert: fs.readFileSync('./test/fixtures/certs/spcp.crt'),

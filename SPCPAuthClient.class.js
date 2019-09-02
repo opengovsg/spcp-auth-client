@@ -19,9 +19,9 @@ class SPCPAuthClient {
    * @param  {String} config.idpLoginURL - the fully-qualified SingPass/CorpPass IDP url to redirect login attempts to
    * @param  {String} config.idpEndpoint - the fully-qualified SingPass/CorpPass IDP url for out-of-band (OOB) authentication
    * @param  {String} config.esrvcID - the e-service identifier registered with SingPass/CorpPass
-   * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass and for JWT verification
-   * @param  {(String|Buffer)} config.appSigningKey - the e-service certificate private key used for signature verification and JWT creation
-   * @param  {(String|Buffer)} config.appEncryptionKey - the e-service private key used decrypt  artifact response from SPCP
+   * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass
+   * @param  {(String|Buffer)} config.appKey - the e-service certificate private key
+   * @param  {(String|Buffer)} config.appEncryptionKey - the e-service private key used decrypt  artifact response from SPCP, if different from appKey
    * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
@@ -30,8 +30,7 @@ class SPCPAuthClient {
       'partnerEntityId',
       'idpEndpoint',
       'idpLoginURL',
-      'appSigningKey',
-      'appEncryptionKey',
+      'appKey',
       'appCert',
       'spcpCert',
       'esrvcID',
@@ -44,6 +43,7 @@ class SPCPAuthClient {
         throw new Error(param + ' undefined')
       }
     }
+    this.appEncryptionKey = config.appEncryptionKey || config.appKey
     this.extract = config.extract || SPCPAuthClient.extract.SINGPASS
     this.jwtAlgorithm = 'RS256'
   }
@@ -81,7 +81,7 @@ class SPCPAuthClient {
   createJWT (payload, expiresIn) {
     return jwt.sign(
       payload,
-      this.appSigningKey,
+      this.appKey,
       { expiresIn, algorithm: this.jwtAlgorithm }
     )
   }
@@ -104,7 +104,7 @@ class SPCPAuthClient {
   /**
    * Signs xml with provided key
    * @param  {String} xml - Xml containing artifact to be signed
-   * @return {String} artifactResolve - Artifact resolve to send to SPCP
+   * @return {Object} artifactResolve - Artifact resolve to send to SPCP
    */
   signXML (xml) {
     let sig = new xmlCrypto.SignedXml()
@@ -117,7 +117,7 @@ class SPCPAuthClient {
     let xpath = "//*[local-name(.)='ArtifactResolve']"
     sig.addReference(xpath, transforms, digestAlgorithm)
 
-    sig.signingKey = this.appSigningKey
+    sig.signingKey = this.appKey
     sig.signatureAlgorithm = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
 
     let artifactResolve = null
@@ -148,7 +148,7 @@ class SPCPAuthClient {
   verifyXML (xml) {
     /**
      * Creates KeyInfo function
-     * @param  {String} key - Public key of SPCP
+     * @param  {String|Buffer} key - Public key of SPCP
      */
     function KeyInfo (key) {
       this.getKey = function () {
@@ -221,7 +221,7 @@ class SPCPAuthClient {
   /**
    * Creates a nested error object
    * @param  {String} errMsg - A human readable description of the error
-   * @param  {String} cause - The error stack
+   * @param  {String|Object} cause - The error stack
    * @return {String} nestedError - Nested error object
    */
   makeNestedError (errMsg, cause) {
