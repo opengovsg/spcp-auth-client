@@ -7,6 +7,7 @@ describe('SPCPAuthClient - createRedirectURL', () => {
     idpEndpoint: 'idpEndpoint',
     idpLoginURL: 'idpLoginURL',
     appKey: 'appKey',
+    appEncryptionKey: 'appEncryptionKey',
     appCert: 'appCert',
     spcpCert: 'spcpCert',
     esrvcID: 'esrvcID',

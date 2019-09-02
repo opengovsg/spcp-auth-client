@@ -21,6 +21,7 @@ class SPCPAuthClient {
    * @param  {String} config.esrvcID - the e-service identifier registered with SingPass/CorpPass
    * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass
    * @param  {(String|Buffer)} config.appKey - the e-service certificate private key
+   * @param  {(String|Buffer)} config.appEncryptionKey - the e-service private key used decrypt  artifact response from SPCP, if different from appKey
    * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
@@ -42,6 +43,7 @@ class SPCPAuthClient {
         throw new Error(param + ' undefined')
       }
     }
+    this.appEncryptionKey = config.appEncryptionKey || config.appKey
     this.extract = config.extract || SPCPAuthClient.extract.SINGPASS
     this.jwtAlgorithm = 'RS256'
   }
@@ -102,7 +104,7 @@ class SPCPAuthClient {
   /**
    * Signs xml with provided key
    * @param  {String} xml - Xml containing artifact to be signed
-   * @return {String} artifactResolve - Artifact resolve to send to SPCP
+   * @return {Object} artifactResolve - Artifact resolve to send to SPCP
    */
   signXML (xml) {
     let sig = new xmlCrypto.SignedXml()
@@ -146,7 +148,7 @@ class SPCPAuthClient {
   verifyXML (xml) {
     /**
      * Creates KeyInfo function
-     * @param  {String} key - Public key of SPCP
+     * @param  {String|Buffer} key - Public key of SPCP
      */
     function KeyInfo (key) {
       this.getKey = function () {
@@ -201,7 +203,7 @@ class SPCPAuthClient {
    */
   decryptXML (encryptedData) {
     return xmlEnc.decrypt(encryptedData, {
-      key: this.appKey,
+      key: this.appEncryptionKey,
     }, (err, decryptedData) => {
       let attributes = null
       let decryptionError = null
@@ -219,7 +221,7 @@ class SPCPAuthClient {
   /**
    * Creates a nested error object
    * @param  {String} errMsg - A human readable description of the error
-   * @param  {String} cause - The error stack
+   * @param  {String|Object} cause - The error stack
    * @return {String} nestedError - Nested error object
    */
   makeNestedError (errMsg, cause) {

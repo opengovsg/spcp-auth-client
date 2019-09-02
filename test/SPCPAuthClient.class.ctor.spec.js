@@ -34,6 +34,7 @@ describe('SPCPAuthClient - Constructor Tests', () => {
       idpEndpoint: 'idpEndpoint',
       idpLoginURL: 'idpLoginURL',
       appKey: 'appKey',
+      appEncryptionKey: 'appEncryptionKey',
       appCert: 'appCert',
       spcpCert: 'spcpCert',
       esrvcID: 'esrvcID',
@@ -43,9 +44,24 @@ describe('SPCPAuthClient - Constructor Tests', () => {
     expect(authClient.idpEndpoint).to.equal(config.idpEndpoint)
     expect(authClient.idpLoginURL).to.equal(config.idpLoginURL)
     expect(authClient.appKey).to.equal(config.appKey)
+    expect(authClient.appEncryptionKey).to.equal(config.appEncryptionKey)
     expect(authClient.appCert).to.equal(config.appCert)
     expect(authClient.spcpCert).to.equal(config.spcpCert)
     expect(authClient.esrvcID).to.equal(config.esrvcID)
     expect(authClient.jwtAlgorithm).to.equal('RS256')
+  })
+
+  it('should use appKey as appEncryptionKey if not provided', () => {
+    const config = {
+      partnerEntityId: 'partnerEntityId',
+      idpEndpoint: 'idpEndpoint',
+      idpLoginURL: 'idpLoginURL',
+      appKey: 'appKey',
+      appCert: 'appCert',
+      spcpCert: 'spcpCert',
+      esrvcID: 'esrvcID',
+    }
+    const authClient = new SPCPAuthClient(config)
+    expect(authClient.appEncryptionKey).to.equal(config.appKey)
   })
 })

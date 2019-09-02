@@ -11,6 +11,7 @@ describe('SPCPAuthClient - JWT Tests', () => {
     idpEndpoint: 'idpEndpoint',
     idpLoginURL: 'idpLoginURL',
     appKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
+    appEncryptionKey: fs.readFileSync('./test/fixtures/certs/key.pem'),
     appCert: fs.readFileSync('./test/fixtures/certs/server.crt'),
     spcpCert: 'spcpCert',
     esrvcID: 'esrvcID',
