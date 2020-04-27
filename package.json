@@ -29,7 +29,7 @@
     "lodash": "^4.17.11",
     "request": "^2.87.0",
     "xml-crypto": "^1.1.1",
-    "xml-encryption": "^0.11.2",
+    "xml-encryption": "^0.13.0",
     "xml2json-light": "^1.0.6",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
