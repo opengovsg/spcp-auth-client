@@ -48,6 +48,6 @@
     "mustache": "2.3.2",
     "nyc": "14.1.1",
     "sinon": "6.3.5",
-    "source-map-support": "0.5.8"
+    "source-map-support": "0.5.19"
   }
 }
