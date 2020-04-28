@@ -21,7 +21,7 @@ describe('SPCPAuthClient - JWT Tests', () => {
     const payload = { key: 'value' }
     const token = authClient.createJWT(payload, '1 day')
     const result = jwt.verify(
-      token, authClient.appCert, { algorithms: [ authClient.jwtAlgorithm ] }
+      token, authClient.appCert, { algorithms: [authClient.jwtAlgorithm] }
     )
     expect(_.pick(result, 'key')).to.eql(payload)
   })

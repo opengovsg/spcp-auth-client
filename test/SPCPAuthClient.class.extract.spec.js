@@ -15,7 +15,7 @@ describe('SPCPAuthClient.extract - Attributes Extract Tests', () => {
   const attributes = input => {
     const assertion = render(TEMPLATE, input)
     return xpath.select(
-      `//*[local-name(.)='Attribute']`,
+      '//*[local-name(.)=\'Attribute\']',
       new xmldom.DOMParser().parseFromString(assertion)
     )
   }

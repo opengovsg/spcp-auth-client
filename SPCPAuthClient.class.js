@@ -36,7 +36,7 @@ class SPCPAuthClient {
       'esrvcID',
     ]
 
-    for (let param of PARAMS) {
+    for (const param of PARAMS) {
       if (config[param]) {
         this[param] = config[param]
       } else {
@@ -107,14 +107,14 @@ class SPCPAuthClient {
    * @return {Object} artifactResolve - Artifact resolve to send to SPCP
    */
   signXML (xml) {
-    let sig = new xmlCrypto.SignedXml()
+    const sig = new xmlCrypto.SignedXml()
 
-    let transforms = [
+    const transforms = [
       'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
       'http://www.w3.org/2001/10/xml-exc-c14n#',
     ]
-    let digestAlgorithm = 'http://www.w3.org/2001/04/xmlenc#sha256'
-    let xpath = "//*[local-name(.)='ArtifactResolve']"
+    const digestAlgorithm = 'http://www.w3.org/2001/04/xmlenc#sha256'
+    const xpath = "//*[local-name(.)='ArtifactResolve']"
     sig.addReference(xpath, transforms, digestAlgorithm)
 
     sig.signingKey = this.appKey
@@ -156,15 +156,12 @@ class SPCPAuthClient {
       }
     }
 
-    let signatures = xpath.select(
+    const signatures = xpath.select(
       "//*[local-name(.)='Signature']",
       new xmldom.DOMParser().parseFromString(xml)
     )
 
-    let verifier
-    let sig0
-    let sig1
-    verifier = new xmlCrypto.SignedXml()
+    const verifier = new xmlCrypto.SignedXml()
     verifier.keyInfoProvider = new KeyInfo(this.spcpCert)
 
     let isVerified = null
@@ -178,7 +175,7 @@ class SPCPAuthClient {
 
     // Check Signature 0
     verifier.loadSignature(signatures[0].toString())
-    sig0 = verifier.checkSignature(xml)
+    const sig0 = verifier.checkSignature(xml)
     if (!sig0) {
       verificationError = verifier.validationErrors
       return { isVerified, verificationError }
@@ -186,7 +183,7 @@ class SPCPAuthClient {
 
     // Check Signature 1
     verifier.loadSignature(signatures[1].toString())
-    sig1 = verifier.checkSignature(xml)
+    const sig1 = verifier.checkSignature(xml)
     if (!sig1) {
       verificationError = verifier.validationErrors
       return { isVerified, verificationError }
@@ -210,7 +207,7 @@ class SPCPAuthClient {
       if (err) {
         decryptionError = err
       } else {
-        const attributeElements = xpath.select(`//*[local-name(.)='Attribute']`,
+        const attributeElements = xpath.select('//*[local-name(.)=\'Attribute\']',
           new xmldom.DOMParser().parseFromString(decryptedData))
         attributes = this.extract(attributeElements)
       }
@@ -294,7 +291,7 @@ class SPCPAuthClient {
               callback(nestedError, { relayState })
             } else {
               // Step 5: Decrypt Artifact Response
-              let encryptedData = xpath.select(
+              const encryptedData = xpath.select(
                 "//*[local-name(.)='EncryptedData']",
                 new xmldom.DOMParser().parseFromString(body)
               ).toString()
@@ -319,13 +316,13 @@ class SPCPAuthClient {
 // Functions for extracting attributes from Artifact Response
 SPCPAuthClient.extract = {
   CORPPASS: ([element]) => {
-    const cpXMLBase64 = xpath.select(`string(./*[local-name(.)='AttributeValue'])`, element)
+    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
     return xml2json(base64.decode(cpXMLBase64))
   },
   SINGPASS: attributeElements => attributeElements.reduce(
     (attributes, element) => {
       const key = xpath.select('string(./@Name)', element)
-      const value = xpath.select(`string(./*[local-name(.)='AttributeValue'])`, element)
+      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
       attributes[key] = value
       return attributes
     },

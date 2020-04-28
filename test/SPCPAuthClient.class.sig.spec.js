@@ -78,14 +78,14 @@ describe('SPCPAuthClient - Signature Tests', () => {
 
     expect(signingError).to.equal(null)
 
-    const [ artifactResolvePayload ] =
+    const [artifactResolvePayload] =
       xpath.select("//*[local-name(.)='ArtifactResolve']", dom(artifactResolve))
 
     const verifier = new SignedXml()
     verifier.keyInfoProvider =
       new FileKeyInfo('./test/fixtures/certs/server.crt')
 
-    const [ signature ] = xpath.select(
+    const [signature] = xpath.select(
       "//*[local-name(.)='Signature']",
       artifactResolvePayload
     )
