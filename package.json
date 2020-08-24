@@ -32,7 +32,7 @@
     "xml-encryption": "^0.13.0",
     "xml2json-light": "^1.0.6",
     "xmldom": "^0.3.0",
-    "xpath": "0.0.27"
+    "xpath": "0.0.29"
   },
   "devDependencies": {
     "@opengovsg/eslint-config-opengovsg": "1.0.7",
