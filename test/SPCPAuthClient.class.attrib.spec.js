@@ -73,7 +73,7 @@ describe('SPCPAuthClient - getAttributes', () => {
       rsa_pub: fs.readFileSync('./test/fixtures/certs/key.pub'),
       pem: fs.readFileSync('./test/fixtures/certs/server.crt'),
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5',
     }
     const callback = (err, data) => {
       if (err) {
