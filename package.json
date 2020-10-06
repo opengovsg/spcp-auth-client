@@ -28,7 +28,7 @@
     "jsonwebtoken": "^8.3.0",
     "lodash": "^4.17.11",
     "request": "^2.87.0",
-    "xml-crypto": "^1.1.1",
+    "xml-crypto": "^2.0.0",
     "xml-encryption": "^1.2.1",
     "xml2json-light": "^1.0.6",
     "xmldom": "^0.3.0",
