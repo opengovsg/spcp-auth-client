@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/opengovsg/spcp-auth-client#readme",
   "dependencies": {
-    "base-64": "^0.1.0",
+    "base-64": "^1.0.0",
     "jsonwebtoken": "^8.3.0",
     "lodash": "^4.17.11",
     "request": "^2.87.0",
