@@ -4,4 +4,5 @@ node_js:
   - node
 script:
   - npm test
+  - npx lockfile-lint --type npm --path package-lock.json --validate-https --allowed-hosts npm
   - npm run ci-lint
