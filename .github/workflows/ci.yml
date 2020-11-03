@@ -1,10 +1,9 @@
-
 name: ci
 on:
   push:
   pull_request:
     types: [opened, reopened]
-    jobs:
+jobs:
   ci:
     name: CI
     runs-on: ubuntu-18.04
@@ -24,8 +23,8 @@ on:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - run: npm ci
-      - npx lockfile-lint --type npm --path package-lock.json --validate-https --allowed-hosts npm
-      - npm run ci-lint
+      - run: npx lockfile-lint --type npm --path package-lock.json --validate-https --allowed-hosts npm
+      - run: npm run ci-lint
   test:
     name: Test
     runs-on: ubuntu-18.04
