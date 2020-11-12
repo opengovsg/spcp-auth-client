@@ -172,15 +172,14 @@ class SPCPAuthClient {
      * Creates KeyInfo function
      * @param  {String|Buffer} key - Public key of SPCP
      */
-    class KeyInfo extends xmlCrypto.FileKeyInfo {
+    class KeyInfo {
       key: string
       constructor (key: string) {
-        super(key)
         this.key = key
       }
 
-      getKey (): Buffer {
-        return Buffer.from(this.key)
+      getKey (): string {
+        return this.key
       }
     }
 
@@ -190,7 +189,7 @@ class SPCPAuthClient {
     )
 
     const verifier = new xmlCrypto.SignedXml()
-    verifier.keyInfoProvider = new KeyInfo(this.spcpCert)
+    verifier.keyInfoProvider = new KeyInfo(this.spcpCert) as unknown as xmlCrypto.FileKeyInfo
 
     let isVerified: IsVerifiedWithErr['isVerified'] = null
     let verificationError: IsVerifiedWithErr['verificationError'] = null
