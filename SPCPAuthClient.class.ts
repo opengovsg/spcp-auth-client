@@ -6,7 +6,8 @@ import { xml2json } from 'xml2json-light'
 import xmldom from 'xmldom'
 import xmlEnc from 'xml-encryption'
 import xpath from 'xpath'
-import { IConfig, XpathNode } from './SPCPAuthClient.types'
+import { difference } from 'lodash'
+import { ArtifactResolveWithErr, AttributesWithErr, GetAttributesCallback, IConfig, IsVerifiedWithErr, NestedError, XpathNode } from './SPCPAuthClient.types'
 
 /**
  * Helper class to assist authenication process with spcp servers
@@ -20,12 +21,12 @@ export default class SPCPAuthClient {
   appKey: string | Buffer
   appEncryptionKey: string | Buffer
   spcpCert: string
-  extract: (attributeElements: XpathNode[]) => Record<string, string>
-  jwtAlgorithm: string
+  extract: (attributeElements: xpath.SelectedValue[]) => Record<string, string>
+  jwtAlgorithm: jwt.Algorithm
 
   static extract: {
-    SINGPASS: (attributeElements: XpathNode[]) => Record<string, string>
-    CORPPASS: (attributeElements: XpathNode[]) => string
+    SINGPASS: (attributeElements: xpath.SelectedValue[]) => Record<string, string>
+    CORPPASS: (attributeElements: xpath.SelectedValue[]) => string
   }
 
   /**
@@ -52,14 +53,18 @@ export default class SPCPAuthClient {
       'spcpCert',
       'esrvcID',
     ]
-
-    for (const param of PARAMS) {
-      if (config[param]) {
-        this[param] = config[param]
-      } else {
-        throw new Error(param + ' undefined')
-      }
+    const missingParams = difference(PARAMS, Object.keys(config))
+    if (missingParams.length > 0) {
+      throw new Error(`${missingParams.join(',')} undefined`)
     }
+
+    this.partnerEntityId = config.partnerEntityId
+    this.idpLoginURL = config.idpLoginURL
+    this.idpEndpoint = config.idpEndpoint
+    this.esrvcID = config.esrvcID
+    this.appCert = config.appCert
+    this.appKey = config.appKey
+    this.spcpCert = config.spcpCert
     this.appEncryptionKey = config.appEncryptionKey || config.appKey
     this.extract = config.extract || SPCPAuthClient.extract.SINGPASS
     this.jwtAlgorithm = 'RS256'
@@ -71,7 +76,7 @@ export default class SPCPAuthClient {
    * @param  {String} esrvcID - Optional e-service Id
    * @return {String} redirectURL - SPCP page to redirect to
    */
-  createRedirectURL (target, esrvcID) {
+  createRedirectURL (target: string, esrvcID: string): string | Error {
     if (!target) {
       return new Error('Target undefined')
     }
@@ -95,7 +100,7 @@ export default class SPCPAuthClient {
    * @param  {(String|Integer)} expiresIn - The lifetime of the jwt token, fed to jsonwebtoken
    * @return {String} the created JWT
    */
-  createJWT (payload, expiresIn) {
+  createJWT (payload: Record<string, string>, expiresIn: string | number): string {
     return jwt.sign(
       payload,
       this.appKey,
@@ -109,7 +114,7 @@ export default class SPCPAuthClient {
    * @param  {Function} callback - Optional - Callback called with decoded payload
    * @return {Object} the decoded payload if no callback supplied, or nothing otherwise
    */
-  verifyJWT (jwtToken, callback) {
+  verifyJWT (jwtToken: string, callback: jwt.VerifyCallback): void {
     return jwt.verify(
       jwtToken,
       this.appCert,
@@ -123,7 +128,7 @@ export default class SPCPAuthClient {
    * @param  {String} xml - Xml containing artifact to be signed
    * @return {Object} artifactResolve - Artifact resolve to send to SPCP
    */
-  signXML (xml) {
+  signXML (xml: string): ArtifactResolveWithErr {
     const sig = new xmlCrypto.SignedXml()
 
     const transforms = [
@@ -137,8 +142,8 @@ export default class SPCPAuthClient {
     sig.signingKey = this.appKey
     sig.signatureAlgorithm = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
 
-    let artifactResolve = null
-    let signingError = null
+    let artifactResolve: ArtifactResolveWithErr['artifactResolve'] = null
+    let signingError: ArtifactResolveWithErr['signingError'] = null
 
     try {
       sig.computeSignature(xml, { prefix: 'ds' })
@@ -162,14 +167,20 @@ export default class SPCPAuthClient {
    * @param  {String} xml - Artifact Response from SPCP
    * @return {Boolean} sig0 - Boolean value of whether signatures in artifact response are verified
    */
-  verifyXML (xml) {
+  verifyXML (xml: string): IsVerifiedWithErr {
     /**
      * Creates KeyInfo function
      * @param  {String|Buffer} key - Public key of SPCP
      */
-    function KeyInfo (key) {
-      this.getKey = function () {
-        return key
+    class KeyInfo extends xmlCrypto.FileKeyInfo {
+      key: string
+      constructor (key: string) {
+        super(key)
+        this.key = key
+      }
+
+      getKey (): Buffer {
+        return Buffer.from(this.key)
       }
     }
 
@@ -181,8 +192,8 @@ export default class SPCPAuthClient {
     const verifier = new xmlCrypto.SignedXml()
     verifier.keyInfoProvider = new KeyInfo(this.spcpCert)
 
-    let isVerified = null
-    let verificationError = null
+    let isVerified: IsVerifiedWithErr['isVerified'] = null
+    let verificationError: IsVerifiedWithErr['verificationError'] = null
 
     // Artifact Response should contain 2 signatures
     if (!signatures || signatures.length !== 2) {
@@ -215,12 +226,12 @@ export default class SPCPAuthClient {
    * @param  {String} encryptedData - Encrypted data in artifact response from SPCP
    * @return {Object} a k-v map of attributes obtained from the artifact
    */
-  decryptXML (encryptedData) {
+  decryptXML (encryptedData: string): AttributesWithErr {
     return xmlEnc.decrypt(encryptedData, {
       key: this.appEncryptionKey,
     }, (err, decryptedData) => {
-      let attributes = null
-      let decryptionError = null
+      let attributes: AttributesWithErr['attributes'] = null
+      let decryptionError: AttributesWithErr['decryptionError'] = null
       if (err) {
         decryptionError = err
       } else {
@@ -238,8 +249,8 @@ export default class SPCPAuthClient {
    * @param  {String|Object} cause - The error stack
    * @return {String} nestedError - Nested error object
    */
-  makeNestedError (errMsg, cause) {
-    const nestedError = new Error(errMsg)
+  makeNestedError (errMsg: string, cause: unknown): NestedError {
+    const nestedError = new Error(errMsg) as NestedError
     nestedError.cause = cause
     return nestedError
   }
@@ -250,7 +261,7 @@ export default class SPCPAuthClient {
    * @param  {String} relayState - State passed in on intial spcp redirect
    * @param {Function} callback - Callback function with inputs error and UserName
    */
-  getAttributes (samlArt, relayState, callback) {
+  getAttributes (samlArt: string, relayState: string, callback: GetAttributesCallback): void {
     // Step 1: Check if relay state present
     if (!samlArt || !relayState) {
       callback(
@@ -333,16 +344,16 @@ export default class SPCPAuthClient {
 // Functions for extracting attributes from Artifact Response
 SPCPAuthClient.extract = {
   CORPPASS: ([element]) => {
-    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
+    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element as XpathNode) as unknown as string
     return xml2json(base64.decode(cpXMLBase64))
   },
   SINGPASS: attributeElements => attributeElements.reduce(
     (attributes, element) => {
-      const key = xpath.select('string(./@Name)', element) as unknown as string
-      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
+      const key = xpath.select('string(./@Name)', element as XpathNode) as unknown as string
+      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element as XpathNode) as unknown as string
       attributes[key] = value
       return attributes
     },
-    {}
+    {} as Record<string, string>
   ),
 }
