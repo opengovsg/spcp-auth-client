@@ -3,6 +3,7 @@
   "version": "1.3.6",
   "description": "Integrates SingPass and CorpPass into your node.js application",
   "main": "build/SPCPAuthClient.class.js",
+  "types": "build/SPCPAuthClient.class.d.ts",
   "scripts": {
     "test": "npm run build && nyc --source-map --produce-source-map mocha test --require=source-map-support/register",
     "build": "tsc",
