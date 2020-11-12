@@ -38,6 +38,7 @@
     "@opengovsg/eslint-config-opengovsg": "1.0.7",
     "@types/base-64": "^0.1.3",
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/lodash": "^4.14.165",
     "@types/request": "^2.48.5",
     "@types/xml-crypto": "^1.4.1",
     "@types/xmldom": "^0.1.30",
