@@ -6,11 +6,28 @@ import { xml2json } from 'xml2json-light'
 import xmldom from 'xmldom'
 import xmlEnc from 'xml-encryption'
 import xpath from 'xpath'
+import { IConfig, XpathNode } from './SPCPAuthClient.types'
 
 /**
  * Helper class to assist authenication process with spcp servers
  */
-class SPCPAuthClient {
+export default class SPCPAuthClient {
+  partnerEntityId: string
+  idpLoginURL: string
+  idpEndpoint: string
+  esrvcID: string
+  appCert: string | Buffer
+  appKey: string | Buffer
+  appEncryptionKey: string | Buffer
+  spcpCert: string
+  extract: (attributeElements: XpathNode[]) => Record<string, string>
+  jwtAlgorithm: string
+
+  static extract: {
+    SINGPASS: (attributeElements: XpathNode[]) => Record<string, string>
+    CORPPASS: (attributeElements: XpathNode[]) => string
+  }
+
   /**
    * Creates an instance of the class
    * This instance will create and verify JSON Web Tokens (JWT) using RSA-256
@@ -25,7 +42,7 @@ class SPCPAuthClient {
    * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
-  constructor (config) {
+  constructor (config: IConfig) {
     const PARAMS = [
       'partnerEntityId',
       'idpEndpoint',
@@ -316,18 +333,16 @@ class SPCPAuthClient {
 // Functions for extracting attributes from Artifact Response
 SPCPAuthClient.extract = {
   CORPPASS: ([element]) => {
-    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
+    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
     return xml2json(base64.decode(cpXMLBase64))
   },
   SINGPASS: attributeElements => attributeElements.reduce(
     (attributes, element) => {
-      const key = xpath.select('string(./@Name)', element)
-      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
+      const key = xpath.select('string(./@Name)', element) as unknown as string
+      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
       attributes[key] = value
       return attributes
     },
     {}
   ),
 }
-
-module.exports = SPCPAuthClient
