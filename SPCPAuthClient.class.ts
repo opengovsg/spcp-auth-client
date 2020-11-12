@@ -1,11 +1,11 @@
-const base64 = require('base-64')
-const jwt = require('jsonwebtoken')
-const request = require('request')
-const xmlCrypto = require('xml-crypto')
-const { xml2json } = require('xml2json-light')
-const xmldom = require('xmldom')
-const xmlEnc = require('xml-encryption')
-const xpath = require('xpath')
+import base64 from 'base-64'
+import jwt from 'jsonwebtoken'
+import request from 'request'
+import xmlCrypto from 'xml-crypto'
+import { xml2json } from 'xml2json-light'
+import xmldom from 'xmldom'
+import xmlEnc from 'xml-encryption'
+import xpath from 'xpath'
 
 /**
  * Helper class to assist authenication process with spcp servers
