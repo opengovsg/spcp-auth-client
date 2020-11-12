@@ -12,7 +12,7 @@ import { ArtifactResolveWithErr, AttributesWithErr, GetAttributesCallback, IConf
 /**
  * Helper class to assist authenication process with spcp servers
  */
-export default class SPCPAuthClient {
+class SPCPAuthClient {
   partnerEntityId: string
   idpLoginURL: string
   idpEndpoint: string
@@ -357,3 +357,5 @@ SPCPAuthClient.extract = {
     {} as Record<string, string>
   ),
 }
+
+export = SPCPAuthClient
