@@ -21,12 +21,12 @@ class SPCPAuthClient {
   appKey: string | Buffer
   appEncryptionKey: string | Buffer
   spcpCert: string
-  extract: (attributeElements: xpath.SelectedValue[]) => Record<string, string>
+  extract: (attributeElements: XpathNode[]) => Record<string, string>
   jwtAlgorithm: jwt.Algorithm
 
   static extract: {
-    SINGPASS: (attributeElements: xpath.SelectedValue[]) => Record<string, string>
-    CORPPASS: (attributeElements: xpath.SelectedValue[]) => string
+    SINGPASS: (attributeElements: XpathNode[]) => Record<string, string>
+    CORPPASS: (attributeElements: XpathNode[]) => string
   }
 
   /**
@@ -235,7 +235,7 @@ class SPCPAuthClient {
         decryptionError = err
       } else {
         const attributeElements = xpath.select('//*[local-name(.)=\'Attribute\']',
-          new xmldom.DOMParser().parseFromString(decryptedData))
+          new xmldom.DOMParser().parseFromString(decryptedData)) as XpathNode[]
         attributes = this.extract(attributeElements)
       }
       return { attributes, decryptionError }
@@ -343,13 +343,13 @@ class SPCPAuthClient {
 // Functions for extracting attributes from Artifact Response
 SPCPAuthClient.extract = {
   CORPPASS: ([element]) => {
-    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element as XpathNode) as unknown as string
+    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
     return xml2json(base64.decode(cpXMLBase64))
   },
   SINGPASS: attributeElements => attributeElements.reduce(
     (attributes, element) => {
-      const key = xpath.select('string(./@Name)', element as XpathNode) as unknown as string
-      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element as XpathNode) as unknown as string
+      const key = xpath.select('string(./@Name)', element) as unknown as string
+      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
       attributes[key] = value
       return attributes
     },
