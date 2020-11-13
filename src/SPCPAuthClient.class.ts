@@ -21,12 +21,12 @@ class SPCPAuthClient {
   appKey: string | Buffer
   appEncryptionKey: string | Buffer
   spcpCert: string
-  extract: (attributeElements: XpathNode[]) => Record<string, string>
+  extract: (attributeElements: XpathNode[]) => Record<string, unknown>
   jwtAlgorithm: jwt.Algorithm
 
   static extract: {
-    SINGPASS: (attributeElements: XpathNode[]) => Record<string, string>
-    CORPPASS: (attributeElements: XpathNode[]) => string
+    SINGPASS: (attributeElements: XpathNode[]) => Record<string, unknown>
+    CORPPASS: (attributeElements: XpathNode[]) => Record<string, unknown>
   }
 
   /**
@@ -349,11 +349,11 @@ SPCPAuthClient.extract = {
   SINGPASS: attributeElements => attributeElements.reduce(
     (attributes, element) => {
       const key = xpath.select('string(./@Name)', element) as unknown as string
-      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
+      const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
       attributes[key] = value
       return attributes
     },
-    {} as Record<string, string>
+    {} as Record<string, unknown>
   ),
 }
 

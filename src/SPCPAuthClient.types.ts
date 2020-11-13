@@ -23,7 +23,7 @@ export type IsVerifiedWithErr = {
 }
 
 export type AttributesWithErr = {
-  attributes: Record<string, string> | null
+  attributes: Record<string, unknown> | null
   decryptionError: Error | null
 }
 
@@ -32,7 +32,7 @@ export type NestedError = Error & { cause: unknown }
 export type GetAttributesCallback = (
   err: Error | null,
   data:
-    | { relayState: string, attributes?: Record<string, string> }
+    | { relayState: string, attributes?: Record<string, unknown> }
     | null
 ) => void
 
