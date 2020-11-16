@@ -76,7 +76,7 @@ class SPCPAuthClient {
    * @param  {String} esrvcID - Optional e-service Id
    * @return {String} redirectURL - SPCP page to redirect to
    */
-  createRedirectURL (target: string, esrvcID: string): string | Error {
+  createRedirectURL (target: string, esrvcID?: string): string | Error {
     if (!target) {
       return new Error('Target undefined')
     }
