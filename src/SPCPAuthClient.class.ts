@@ -100,7 +100,7 @@ class SPCPAuthClient {
    * @param  {(String|Integer)} expiresIn - The lifetime of the jwt token, fed to jsonwebtoken
    * @return {String} the created JWT
    */
-  createJWT (payload: Record<string, string>, expiresIn: string | number): string {
+  createJWT (payload: Record<string, unknown> | unknown[], expiresIn: string | number): string {
     return jwt.sign(
       payload,
       this.appKey,
