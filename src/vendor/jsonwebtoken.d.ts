@@ -99,10 +99,10 @@ export type VerifyErrors =
     | JsonWebTokenError
     | NotBeforeError
     | TokenExpiredError;
-export type VerifyCallback = (
+export type VerifyCallback<T> = (
     err: VerifyErrors | null,
     decoded: object | undefined,
-) => void;
+) => T;
 
 export type SignCallback = (
     err: Error | null, encoded: string | undefined
@@ -189,17 +189,17 @@ export function verify(token: string, secretOrPublicKey: Secret, options?: Verif
  * [options] - Options for the verification
  * callback - Callback to get the decoded token on
  */
-export function verify(
+export function verify<T>(
     token: string,
     secretOrPublicKey: Secret | GetPublicKeyOrSecret,
-    callback?: VerifyCallback,
-): void;
-export function verify(
+    callback?: VerifyCallback<T>,
+): T;
+export function verify<T>(
     token: string,
     secretOrPublicKey: Secret | GetPublicKeyOrSecret,
     options?: VerifyOptions,
-    callback?: VerifyCallback,
-): void;
+    callback?: VerifyCallback<T>,
+): T;
 
 /**
  * Returns the decoded payload without verifying if the signature is valid.
