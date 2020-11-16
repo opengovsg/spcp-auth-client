@@ -73,8 +73,8 @@ class SPCPAuthClient {
   /**
    * Generates redirect URL to Official SPCP log-in page
    * @param  {String} target - State to pass SPCP
-   * @param  {String} esrvcID - Optional e-service Id
-   * @return {String} redirectURL - SPCP page to redirect to
+   * @param  {String} [esrvcID] - Optional e-service Id
+   * @return {(String|Error)} redirectURL - SPCP page to redirect to or error if target was not given
    */
   createRedirectURL (target: string, esrvcID?: string): string | Error {
     if (!target) {
@@ -111,7 +111,7 @@ class SPCPAuthClient {
   /**
    * Verifies a JWT for SingPass/CorpPass-authenticated session
    * @param  {String} jwtToken - The JWT to verify
-   * @param  {Function} callback - Optional - Callback called with decoded payload
+   * @param  {Function} [callback] - Optional - Callback called with decoded payload
    * @return {Object} the decoded payload if no callback supplied, or nothing otherwise
    */
   verifyJWT<T> (jwtToken: string, callback?: jwt.VerifyCallback<T>): T {
@@ -126,7 +126,8 @@ class SPCPAuthClient {
   /**
    * Signs xml with provided key
    * @param  {String} xml - Xml containing artifact to be signed
-   * @return {Object} artifactResolve - Artifact resolve to send to SPCP
+   * @return {Object} { artifactResolve, signingError } - Artifact resolve to send to SPCP
+   * and error if there was an error.
    */
   signXML (xml: string): ArtifactResolveWithErr {
     const sig = new xmlCrypto.SignedXml()
@@ -165,7 +166,8 @@ class SPCPAuthClient {
   /**
    * Verifies signatures in artifact response from SPCP based on public key of SPCP
    * @param  {String} xml - Artifact Response from SPCP
-   * @return {Boolean} sig0 - Boolean value of whether signatures in artifact response are verified
+   * @return {Object} { isVerified, verificationError } - Boolean value of whether
+   * signatures in artifact response are verified, and error if the operation failed.
    */
   verifyXML (xml: string): IsVerifiedWithErr {
     /**
@@ -223,7 +225,9 @@ class SPCPAuthClient {
   /**
    * Decrypts encrypted data in artifact response from SPCP based on app private key
    * @param  {String} encryptedData - Encrypted data in artifact response from SPCP
-   * @return {Object} a k-v map of attributes obtained from the artifact
+   * @return {Object} { attributes, decryptionError } - attributes is a k-v map of
+   * attributes obtained from the artifact, and decryptionError is the error if the
+   * operation failed.
    */
   decryptXML (encryptedData: string): AttributesWithErr {
     return xmlEnc.decrypt(encryptedData, {
@@ -246,7 +250,7 @@ class SPCPAuthClient {
    * Creates a nested error object
    * @param  {String} errMsg - A human readable description of the error
    * @param  {String|Object} cause - The error stack
-   * @return {String} nestedError - Nested error object
+   * @return {Error} nestedError - Nested error object
    */
   makeNestedError (errMsg: string, cause: unknown): NestedError {
     const nestedError = new Error(errMsg) as NestedError
