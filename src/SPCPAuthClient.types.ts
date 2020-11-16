@@ -1,4 +1,4 @@
-import xpath, { XPathSelect } from 'xpath'
+import { XPathSelect } from 'xpath'
 
 export type XpathNode = Parameters<XPathSelect>[1]
 export interface AuthClientConfig {
