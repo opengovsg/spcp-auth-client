@@ -1,5 +1,6 @@
 import xpath, { XPathSelect } from 'xpath'
 
+export type XpathNode = Parameters<XPathSelect>[1]
 export interface AuthClientConfig {
   partnerEntityId: string
   idpLoginURL: string
@@ -9,7 +10,7 @@ export interface AuthClientConfig {
   appKey: string | Buffer
   appEncryptionKey?: string | Buffer
   spcpCert: string | Buffer
-  extract?: (attributeElements: xpath.SelectedValue[]) => Record<string, string>
+  extract?: (attributeElements: XpathNode[]) => Record<string, unknown>
 }
 
 export type ArtifactResolveWithErr = {
@@ -35,5 +36,3 @@ export type GetAttributesCallback = (
     | { relayState: string, attributes?: Record<string, unknown> }
     | null
 ) => void
-
-export type XpathNode = Parameters<XPathSelect>[1]
