@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // Adapted from Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // Type definitions for jsonwebtoken 8.5
 
@@ -20,7 +22,7 @@ declare module 'jsonwebtoken' {
     inner: Error;
 
     constructor(message: string, error?: Error);
-}
+  }
 
 export class TokenExpiredError extends JsonWebTokenError {
     expiredAt: Date;
@@ -118,11 +120,11 @@ export interface JwtHeader {
 }
 
 export type Algorithm =
-    "HS256" | "HS384" | "HS512" |
-    "RS256" | "RS384" | "RS512" |
-    "ES256" | "ES384" | "ES512" |
-    "PS256" | "PS384" | "PS512" |
-    "none";
+    'HS256' | 'HS384' | 'HS512' |
+    'RS256' | 'RS384' | 'RS512' |
+    'ES256' | 'ES384' | 'ES512' |
+    'PS256' | 'PS384' | 'PS512' |
+    'none';
 
 export type SigningKeyCallback = (
     err: any,
