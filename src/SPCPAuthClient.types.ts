@@ -1,6 +1,6 @@
 import xpath, { XPathSelect } from 'xpath'
 
-export interface IConfig {
+export interface AuthClientConfig {
   partnerEntityId: string
   idpLoginURL: string
   idpEndpoint: string

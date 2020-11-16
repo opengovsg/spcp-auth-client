@@ -7,7 +7,7 @@ import xmldom from 'xmldom'
 import xmlEnc from 'xml-encryption'
 import xpath from 'xpath'
 import { difference } from 'lodash'
-import { ArtifactResolveWithErr, AttributesWithErr, GetAttributesCallback, IConfig, IsVerifiedWithErr, NestedError, XpathNode } from './SPCPAuthClient.types'
+import { ArtifactResolveWithErr, AttributesWithErr, GetAttributesCallback, AuthClientConfig, IsVerifiedWithErr, NestedError, XpathNode } from './SPCPAuthClient.types'
 
 /**
  * Helper class to assist authenication process with spcp servers
@@ -43,7 +43,7 @@ class SPCPAuthClient {
    * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
-  constructor (config: IConfig) {
+  constructor (config: AuthClientConfig) {
     const PARAMS = [
       'partnerEntityId',
       'idpEndpoint',
