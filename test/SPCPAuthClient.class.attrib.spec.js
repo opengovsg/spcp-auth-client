@@ -8,7 +8,7 @@ const xmlEnc = require('xml-encryption')
 
 const { encrypt } = xmlEnc
 const { SignedXml } = xmlCrypto
-const SPCPAuthClient = require('../SPCPAuthClient.class')
+const SPCPAuthClient = require('../build/SPCPAuthClient')
 
 describe('SPCPAuthClient - getAttributes', () => {
   const authClient = new SPCPAuthClient({

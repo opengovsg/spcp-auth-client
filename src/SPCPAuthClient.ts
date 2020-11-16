@@ -1,16 +1,34 @@
-const base64 = require('base-64')
-const jwt = require('jsonwebtoken')
-const request = require('request')
-const xmlCrypto = require('xml-crypto')
-const { xml2json } = require('xml2json-light')
-const xmldom = require('xmldom')
-const xmlEnc = require('xml-encryption')
-const xpath = require('xpath')
+import base64 from 'base-64'
+import jwt from 'jsonwebtoken'
+import request from 'request'
+import xmlCrypto from 'xml-crypto'
+import { xml2json } from 'xml2json-light'
+import xmldom from 'xmldom'
+import xmlEnc from 'xml-encryption'
+import xpath from 'xpath'
+import { difference } from 'lodash'
+import { ArtifactResolveWithErr, AttributesWithErr, GetAttributesCallback, AuthClientConfig, IsVerifiedWithErr, NestedError, XPathNode } from './SPCPAuthClient.types'
 
 /**
  * Helper class to assist authenication process with spcp servers
  */
 class SPCPAuthClient {
+  partnerEntityId: string
+  idpLoginURL: string
+  idpEndpoint: string
+  esrvcID: string
+  appCert: string | Buffer
+  appKey: string | Buffer
+  appEncryptionKey: string | Buffer
+  spcpCert: string | Buffer
+  extract: (attributeElements: XPathNode[]) => Record<string, unknown>
+  jwtAlgorithm: jwt.Algorithm
+
+  static extract: {
+    SINGPASS: (attributeElements: XPathNode[]) => Record<string, unknown>
+    CORPPASS: (attributeElements: XPathNode[]) => Record<string, unknown>
+  }
+
   /**
    * Creates an instance of the class
    * This instance will create and verify JSON Web Tokens (JWT) using RSA-256
@@ -22,10 +40,10 @@ class SPCPAuthClient {
    * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass
    * @param  {(String|Buffer)} config.appKey - the e-service certificate private key
    * @param  {(String|Buffer)} config.appEncryptionKey - the e-service private key used decrypt  artifact response from SPCP, if different from appKey
-   * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
+   * @param  {(String|Buffer)} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
-  constructor (config) {
+  constructor (config: AuthClientConfig) {
     const PARAMS = [
       'partnerEntityId',
       'idpEndpoint',
@@ -35,14 +53,18 @@ class SPCPAuthClient {
       'spcpCert',
       'esrvcID',
     ]
-
-    for (const param of PARAMS) {
-      if (config[param]) {
-        this[param] = config[param]
-      } else {
-        throw new Error(param + ' undefined')
-      }
+    const missingParams = difference(PARAMS, Object.keys(config))
+    if (missingParams.length > 0) {
+      throw new Error(`${missingParams.join(',')} undefined`)
     }
+
+    this.partnerEntityId = config.partnerEntityId
+    this.idpLoginURL = config.idpLoginURL
+    this.idpEndpoint = config.idpEndpoint
+    this.esrvcID = config.esrvcID
+    this.appCert = config.appCert
+    this.appKey = config.appKey
+    this.spcpCert = config.spcpCert
     this.appEncryptionKey = config.appEncryptionKey || config.appKey
     this.extract = config.extract || SPCPAuthClient.extract.SINGPASS
     this.jwtAlgorithm = 'RS256'
@@ -51,10 +73,10 @@ class SPCPAuthClient {
   /**
    * Generates redirect URL to Official SPCP log-in page
    * @param  {String} target - State to pass SPCP
-   * @param  {String} esrvcID - Optional e-service Id
-   * @return {String} redirectURL - SPCP page to redirect to
+   * @param  {String} [esrvcID] - Optional e-service Id
+   * @return {(String|Error)} redirectURL - SPCP page to redirect to or error if target was not given
    */
-  createRedirectURL (target, esrvcID) {
+  createRedirectURL (target: string, esrvcID?: string): string | Error {
     if (!target) {
       return new Error('Target undefined')
     }
@@ -78,7 +100,7 @@ class SPCPAuthClient {
    * @param  {(String|Integer)} expiresIn - The lifetime of the jwt token, fed to jsonwebtoken
    * @return {String} the created JWT
    */
-  createJWT (payload, expiresIn) {
+  createJWT (payload: Record<string, unknown> | unknown[], expiresIn: string | number): string {
     return jwt.sign(
       payload,
       this.appKey,
@@ -89,10 +111,10 @@ class SPCPAuthClient {
   /**
    * Verifies a JWT for SingPass/CorpPass-authenticated session
    * @param  {String} jwtToken - The JWT to verify
-   * @param  {Function} callback - Optional - Callback called with decoded payload
+   * @param  {Function} [callback] - Optional - Callback called with decoded payload
    * @return {Object} the decoded payload if no callback supplied, or nothing otherwise
    */
-  verifyJWT (jwtToken, callback) {
+  verifyJWT<T> (jwtToken: string, callback?: jwt.VerifyCallback<T>): T {
     return jwt.verify(
       jwtToken,
       this.appCert,
@@ -104,9 +126,10 @@ class SPCPAuthClient {
   /**
    * Signs xml with provided key
    * @param  {String} xml - Xml containing artifact to be signed
-   * @return {Object} artifactResolve - Artifact resolve to send to SPCP
+   * @return {Object} { artifactResolve, signingError } - Artifact resolve to send to SPCP
+   * and error if there was an error.
    */
-  signXML (xml) {
+  signXML (xml: string): ArtifactResolveWithErr {
     const sig = new xmlCrypto.SignedXml()
 
     const transforms = [
@@ -120,8 +143,8 @@ class SPCPAuthClient {
     sig.signingKey = this.appKey
     sig.signatureAlgorithm = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
 
-    let artifactResolve = null
-    let signingError = null
+    let artifactResolve: ArtifactResolveWithErr['artifactResolve'] = null
+    let signingError: ArtifactResolveWithErr['signingError'] = null
 
     try {
       sig.computeSignature(xml, { prefix: 'ds' })
@@ -143,16 +166,22 @@ class SPCPAuthClient {
   /**
    * Verifies signatures in artifact response from SPCP based on public key of SPCP
    * @param  {String} xml - Artifact Response from SPCP
-   * @return {Boolean} sig0 - Boolean value of whether signatures in artifact response are verified
+   * @return {Object} { isVerified, verificationError } - Boolean value of whether
+   * signatures in artifact response are verified, and error if the operation failed.
    */
-  verifyXML (xml) {
+  verifyXML (xml: string): IsVerifiedWithErr {
     /**
      * Creates KeyInfo function
      * @param  {String|Buffer} key - Public key of SPCP
      */
-    function KeyInfo (key) {
-      this.getKey = function () {
-        return key
+    class KeyInfo {
+      key: string
+      constructor (key: string | Buffer) {
+        this.key = key.toString()
+      }
+
+      getKey (): string {
+        return this.key
       }
     }
 
@@ -162,10 +191,10 @@ class SPCPAuthClient {
     )
 
     const verifier = new xmlCrypto.SignedXml()
-    verifier.keyInfoProvider = new KeyInfo(this.spcpCert)
+    verifier.keyInfoProvider = new KeyInfo(this.spcpCert) as unknown as xmlCrypto.FileKeyInfo
 
-    let isVerified = null
-    let verificationError = null
+    let isVerified: IsVerifiedWithErr['isVerified'] = null
+    let verificationError: IsVerifiedWithErr['verificationError'] = null
 
     // Artifact Response should contain 2 signatures
     if (!signatures || signatures.length !== 2) {
@@ -196,19 +225,21 @@ class SPCPAuthClient {
   /**
    * Decrypts encrypted data in artifact response from SPCP based on app private key
    * @param  {String} encryptedData - Encrypted data in artifact response from SPCP
-   * @return {Object} a k-v map of attributes obtained from the artifact
+   * @return {Object} { attributes, decryptionError } - attributes is a k-v map of
+   * attributes obtained from the artifact, and decryptionError is the error if the
+   * operation failed.
    */
-  decryptXML (encryptedData) {
+  decryptXML (encryptedData: string): AttributesWithErr {
     return xmlEnc.decrypt(encryptedData, {
       key: this.appEncryptionKey,
     }, (err, decryptedData) => {
-      let attributes = null
-      let decryptionError = null
+      let attributes: AttributesWithErr['attributes'] = null
+      let decryptionError: AttributesWithErr['decryptionError'] = null
       if (err) {
         decryptionError = err
       } else {
         const attributeElements = xpath.select('//*[local-name(.)=\'Attribute\']',
-          new xmldom.DOMParser().parseFromString(decryptedData))
+          new xmldom.DOMParser().parseFromString(decryptedData)) as XPathNode[]
         attributes = this.extract(attributeElements)
       }
       return { attributes, decryptionError }
@@ -219,10 +250,10 @@ class SPCPAuthClient {
    * Creates a nested error object
    * @param  {String} errMsg - A human readable description of the error
    * @param  {String|Object} cause - The error stack
-   * @return {String} nestedError - Nested error object
+   * @return {Error} nestedError - Nested error object
    */
-  makeNestedError (errMsg, cause) {
-    const nestedError = new Error(errMsg)
+  makeNestedError (errMsg: string, cause: unknown): NestedError {
+    const nestedError = new Error(errMsg) as NestedError
     nestedError.cause = cause
     return nestedError
   }
@@ -233,7 +264,7 @@ class SPCPAuthClient {
    * @param  {String} relayState - State passed in on intial spcp redirect
    * @param {Function} callback - Callback function with inputs error and UserName
    */
-  getAttributes (samlArt, relayState, callback) {
+  getAttributes (samlArt: string, relayState: string, callback: GetAttributesCallback): void {
     // Step 1: Check if relay state present
     if (!samlArt || !relayState) {
       callback(
@@ -316,18 +347,18 @@ class SPCPAuthClient {
 // Functions for extracting attributes from Artifact Response
 SPCPAuthClient.extract = {
   CORPPASS: ([element]) => {
-    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
+    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element).toString()
     return xml2json(base64.decode(cpXMLBase64))
   },
   SINGPASS: attributeElements => attributeElements.reduce(
     (attributes, element) => {
-      const key = xpath.select('string(./@Name)', element)
+      const key = xpath.select('string(./@Name)', element).toString()
       const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
       attributes[key] = value
       return attributes
     },
-    {}
+    {} as Record<string, unknown>
   ),
 }
 
-module.exports = SPCPAuthClient
+export = SPCPAuthClient
