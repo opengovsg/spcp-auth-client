@@ -1,5 +1,5 @@
 const { expect } = require('chai')
-const SPCPAuthClient = require('../build/SPCPAuthClient.class')
+const SPCPAuthClient = require('../build/SPCPAuthClient')
 
 describe('SPCPAuthClient - createRedirectURL', () => {
   const authClient = new SPCPAuthClient({

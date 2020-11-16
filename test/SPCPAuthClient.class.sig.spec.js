@@ -6,7 +6,7 @@ const xpath = require('xpath')
 const { DOMParser } = require('xmldom')
 
 const { SignedXml, FileKeyInfo } = xmlCrypto
-const SPCPAuthClient = require('../build/SPCPAuthClient.class')
+const SPCPAuthClient = require('../build/SPCPAuthClient')
 const domParser = new DOMParser()
 
 describe('SPCPAuthClient - Signature Tests', () => {

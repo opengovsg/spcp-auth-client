@@ -3,7 +3,7 @@ const _ = require('lodash')
 const fs = require('fs')
 const jwt = require('jsonwebtoken')
 
-const SPCPAuthClient = require('../build/SPCPAuthClient.class')
+const SPCPAuthClient = require('../build/SPCPAuthClient')
 
 describe('SPCPAuthClient - JWT Tests', () => {
   const authClient = new SPCPAuthClient({

@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 const _ = require('lodash')
 
-const SPCPAuthClient = require('../build/SPCPAuthClient.class')
+const SPCPAuthClient = require('../build/SPCPAuthClient')
 
 describe('SPCPAuthClient - Constructor Tests', () => {
   it('should reject construction if parameters missing', () => {

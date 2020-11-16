@@ -5,7 +5,7 @@ const { render } = require('mustache')
 const xpath = require('xpath')
 const xmldom = require('xmldom')
 
-const { extract: { SINGPASS: singPass, CORPPASS: corpPass } } = require('../build/SPCPAuthClient.class')
+const { extract: { SINGPASS: singPass, CORPPASS: corpPass } } = require('../build/SPCPAuthClient')
 
 describe('SPCPAuthClient.extract - Attributes Extract Tests', () => {
   const TEMPLATE = fs.readFileSync(
