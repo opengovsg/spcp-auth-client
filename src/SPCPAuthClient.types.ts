@@ -8,7 +8,7 @@ export interface AuthClientConfig {
   appCert: string | Buffer
   appKey: string | Buffer
   appEncryptionKey?: string | Buffer
-  spcpCert: string
+  spcpCert: string | Buffer
   extract?: (attributeElements: xpath.SelectedValue[]) => Record<string, string>
 }
 

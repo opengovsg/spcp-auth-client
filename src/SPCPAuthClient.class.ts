@@ -20,7 +20,7 @@ class SPCPAuthClient {
   appCert: string | Buffer
   appKey: string | Buffer
   appEncryptionKey: string | Buffer
-  spcpCert: string
+  spcpCert: string | Buffer
   extract: (attributeElements: XpathNode[]) => Record<string, unknown>
   jwtAlgorithm: jwt.Algorithm
 
@@ -40,7 +40,7 @@ class SPCPAuthClient {
    * @param  {(String|Buffer)} config.appCert - the e-service public certificate issued to SingPass/CorpPass
    * @param  {(String|Buffer)} config.appKey - the e-service certificate private key
    * @param  {(String|Buffer)} config.appEncryptionKey - the e-service private key used decrypt  artifact response from SPCP, if different from appKey
-   * @param  {String} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
+   * @param  {(String|Buffer)} config.spcpCert - the public certificate of SingPass/CorpPass, for OOB authentication
    * @param  {String} config.extract - Optional function for extracting information from Artifact Response
    */
   constructor (config: AuthClientConfig) {
@@ -174,8 +174,8 @@ class SPCPAuthClient {
      */
     class KeyInfo {
       key: string
-      constructor (key: string) {
-        this.key = key
+      constructor (key: string | Buffer) {
+        this.key = key.toString()
       }
 
       getKey (): string {
