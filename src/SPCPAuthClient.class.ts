@@ -114,7 +114,7 @@ class SPCPAuthClient {
    * @param  {Function} callback - Optional - Callback called with decoded payload
    * @return {Object} the decoded payload if no callback supplied, or nothing otherwise
    */
-  verifyJWT (jwtToken: string, callback: jwt.VerifyCallback): void {
+  verifyJWT<T> (jwtToken: string, callback?: jwt.VerifyCallback<T>): T {
     return jwt.verify(
       jwtToken,
       this.appCert,
