@@ -1,6 +1,6 @@
 import { XPathSelect } from 'xpath'
 
-export type XpathNode = Parameters<XPathSelect>[1]
+export type XPathNode = Parameters<XPathSelect>[1]
 export interface AuthClientConfig {
   partnerEntityId: string
   idpLoginURL: string
@@ -10,7 +10,7 @@ export interface AuthClientConfig {
   appKey: string | Buffer
   appEncryptionKey?: string | Buffer
   spcpCert: string | Buffer
-  extract?: (attributeElements: XpathNode[]) => Record<string, unknown>
+  extract?: (attributeElements: XPathNode[]) => Record<string, unknown>
 }
 
 export type ArtifactResolveWithErr = {

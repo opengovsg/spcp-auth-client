@@ -7,7 +7,7 @@ import xmldom from 'xmldom'
 import xmlEnc from 'xml-encryption'
 import xpath from 'xpath'
 import { difference } from 'lodash'
-import { ArtifactResolveWithErr, AttributesWithErr, GetAttributesCallback, AuthClientConfig, IsVerifiedWithErr, NestedError, XpathNode } from './SPCPAuthClient.types'
+import { ArtifactResolveWithErr, AttributesWithErr, GetAttributesCallback, AuthClientConfig, IsVerifiedWithErr, NestedError, XPathNode } from './SPCPAuthClient.types'
 
 /**
  * Helper class to assist authenication process with spcp servers
@@ -21,12 +21,12 @@ class SPCPAuthClient {
   appKey: string | Buffer
   appEncryptionKey: string | Buffer
   spcpCert: string | Buffer
-  extract: (attributeElements: XpathNode[]) => Record<string, unknown>
+  extract: (attributeElements: XPathNode[]) => Record<string, unknown>
   jwtAlgorithm: jwt.Algorithm
 
   static extract: {
-    SINGPASS: (attributeElements: XpathNode[]) => Record<string, unknown>
-    CORPPASS: (attributeElements: XpathNode[]) => Record<string, unknown>
+    SINGPASS: (attributeElements: XPathNode[]) => Record<string, unknown>
+    CORPPASS: (attributeElements: XPathNode[]) => Record<string, unknown>
   }
 
   /**
@@ -239,7 +239,7 @@ class SPCPAuthClient {
         decryptionError = err
       } else {
         const attributeElements = xpath.select('//*[local-name(.)=\'Attribute\']',
-          new xmldom.DOMParser().parseFromString(decryptedData)) as XpathNode[]
+          new xmldom.DOMParser().parseFromString(decryptedData)) as XPathNode[]
         attributes = this.extract(attributeElements)
       }
       return { attributes, decryptionError }
