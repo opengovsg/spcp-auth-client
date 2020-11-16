@@ -343,12 +343,12 @@ class SPCPAuthClient {
 // Functions for extracting attributes from Artifact Response
 SPCPAuthClient.extract = {
   CORPPASS: ([element]) => {
-    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element) as unknown as string
+    const cpXMLBase64 = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element).toString()
     return xml2json(base64.decode(cpXMLBase64))
   },
   SINGPASS: attributeElements => attributeElements.reduce(
     (attributes, element) => {
-      const key = xpath.select('string(./@Name)', element) as unknown as string
+      const key = xpath.select('string(./@Name)', element).toString()
       const value = xpath.select('string(./*[local-name(.)=\'AttributeValue\'])', element)
       attributes[key] = value
       return attributes
