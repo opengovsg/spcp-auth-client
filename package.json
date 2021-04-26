@@ -1,6 +1,6 @@
 {
   "name": "@opengovsg/spcp-auth-client",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "Integrates SingPass and CorpPass into your node.js application",
   "main": "build/SPCPAuthClient.js",
   "types": "build/SPCPAuthClient.d.ts",
