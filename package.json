@@ -32,7 +32,7 @@
     "lodash": "^4.17.21",
     "request": "^2.88.2",
     "xml-crypto": "^2.1.2",
-    "xml-encryption": "^1.2.3",
+    "xml-encryption": "^1.2.4",
     "xml2json-light": "^1.0.6",
     "xmldom": "^0.6.0",
     "xpath": "0.0.32"
