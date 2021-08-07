@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 const fs = require('fs')
 const { render } = require('mustache')
-const request = require('request')
+const axios = require('axios')
 const sinon = require('sinon')
 const xmlCrypto = require('xml-crypto')
 const xmlEnc = require('xml-encryption')
@@ -97,8 +97,8 @@ describe('SPCPAuthClient - getAttributes', () => {
   })
 
   afterEach(() => {
-    if (typeof request.post.restore === 'function') {
-      request.post.restore()
+    if (typeof axios.post.restore === 'function') {
+      axios.post.restore()
     }
   })
 
@@ -138,9 +138,7 @@ describe('SPCPAuthClient - getAttributes', () => {
 
   it('should error on POST fail', done => {
     const resolveError = new Error('sign')
-    sinon.stub(request, 'post').callsFake((options, callback) => {
-      callback(resolveError, undefined, undefined)
-    })
+    sinon.stub(axios, 'post').rejects(resolveError);
     authClient.getAttributes('artifact', 'relayState', (err, data) => {
       expect(err).to.be.instanceOf(Error)
       expect(err.cause).to.equal(resolveError)
@@ -150,45 +148,37 @@ describe('SPCPAuthClient - getAttributes', () => {
   })
 
   it('should error on verify fail', done => {
-    sinon.stub(request, 'post').callsFake((options, callback) => {
-      callback(undefined, undefined, signedPackage)
-    })
+    sinon.stub(axios, 'post').resolves({ data: signedPackage })
     const verificationError = new Error('verify')
     sinon.stub(authClient, 'verifyXML').returns({
       isVerified: null,
       verificationError,
     })
-    try {
-      authClient.getAttributes('artifact', 'relayState', (err, data) => {
-        expect(err).to.be.instanceOf(Error)
-        expect(err.cause).to.equal(verificationError)
-        expect(data).to.eql({ relayState: 'relayState' })
-        done()
-      })
-    } finally {
+    authClient.getAttributes('artifact', 'relayState', (err, data) => {
+      expect(err).to.be.instanceOf(Error)
+      expect(err.cause).to.equal(verificationError)
+      expect(data).to.eql({ relayState: 'relayState' })
+
       authClient.verifyXML.restore()
-    }
+      done()
+    })
   })
 
   it('should error on decrypt fail', done => {
-    sinon.stub(request, 'post').callsFake((options, callback) => {
-      callback(undefined, undefined, signedPackage)
-    })
+    sinon.stub(axios, 'post').resolves({ data: signedPackage })
     const decryptionError = new Error('decrypt')
     sinon.stub(xmlEnc, 'decrypt').callsFake((data, options, callback) => {
       expect(options.key).to.equal(authClient.appEncryptionKey)
       return callback(decryptionError)
     })
-    try {
-      authClient.getAttributes('artifact', 'relayState', (err, data) => {
-        expect(err).to.be.instanceOf(Error)
-        expect(err.cause).to.equal(decryptionError)
-        expect(data).to.eql({ relayState: 'relayState' })
-        done()
-      })
-    } finally {
-      xmlEnc.decrypt.restore()
-    }
+    authClient.getAttributes('artifact', 'relayState', (err, data) => {
+      expect(err).to.be.instanceOf(Error)
+      expect(err.cause).to.equal(decryptionError)
+      expect(data).to.eql({ relayState: 'relayState' })
+
+      xmlEnc.decrypt.restore();
+      done()
+    })
   })
 
   const expectedXML =
@@ -204,12 +194,11 @@ describe('SPCPAuthClient - getAttributes', () => {
     '</samlp:ArtifactResolve>'
 
   it('should get attributes', done => {
-    sinon.stub(request, 'post').callsFake((options, callback) => {
-      expect(options.url).to.equal(authClient.idpEndpoint)
-      expect(options.body).to.equal(authClient.signXML(expectedXML).artifactResolve)
-      callback(undefined, undefined, signedPackage)
-    })
+    sinon.stub(axios, 'post').resolves({ data: signedPackage })
     authClient.getAttributes('artifact', 'relayState', (err, data) => {
+      expect(axios.post.getCall(0).args[0]).to.equal(authClient.idpEndpoint) // url
+      expect(axios.post.getCall(0).args[1]).to.equal(authClient.signXML(expectedXML).artifactResolve) // body
+
       const attributes = { [input.name]: input.value }
       const expected = { relayState: 'relayState', attributes }
       expect(data, err).to.eql(expected)

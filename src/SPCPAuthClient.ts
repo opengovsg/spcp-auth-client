@@ -1,6 +1,6 @@
 import base64 from 'base-64'
 import jwt from 'jsonwebtoken'
-import request from 'request'
+import axios from 'axios'
 import xmlCrypto from 'xml-crypto'
 import { xml2json } from 'xml2json-light'
 import xmldom from 'xmldom'
@@ -301,44 +301,50 @@ class SPCPAuthClient {
             'content-type': 'text/xml; charset=utf-8',
             SOAPAction: 'http://www.oasis-open.org/committees/security',
           },
-          url: this.idpEndpoint,
-          body: artifactResolve,
         }
-        request.post(requestOptions, (resolveError, response, body) => {
-          if (resolveError) {
-            const nestedError = this.makeNestedError(
-              'Error in Step 3: Send Artifact Resolve over OOB',
-              resolveError
-            )
-            callback(nestedError, { relayState })
-          } else {
-            // Step 4: Verify Artifact Response
-            const { isVerified, verificationError } = this.verifyXML(body)
-            if (!isVerified) {
-              const nestedError = this.makeNestedError(
-                'Error in Step 4: Verify Artifact Response',
-                verificationError
-              )
-              callback(nestedError, { relayState })
-            } else {
-              // Step 5: Decrypt Artifact Response
-              const encryptedData = xpath.select(
-                "//*[local-name(.)='EncryptedData']",
-                new xmldom.DOMParser().parseFromString(body)
-              ).toString()
-              const { attributes, decryptionError } = this.decryptXML(encryptedData)
-              if (attributes) {
-                callback(null, { attributes, relayState })
-              } else {
+        axios.post(
+          this.idpEndpoint, // url
+          artifactResolve, // data
+          requestOptions
+        )
+          .then(
+            response => {
+              const body = response.data
+
+              // Step 4: Verify Artifact Response
+              const { isVerified, verificationError } = this.verifyXML(body)
+              if (!isVerified) {
                 const nestedError = this.makeNestedError(
-                  'Error in Step 5: Decrypt Artifact Response',
-                  decryptionError
+                  'Error in Step 4: Verify Artifact Response',
+                  verificationError
                 )
                 callback(nestedError, { relayState })
+              } else {
+                // Step 5: Decrypt Artifact Response
+                const encryptedData = xpath.select(
+                  "//*[local-name(.)='EncryptedData']",
+                  new xmldom.DOMParser().parseFromString(body)
+                ).toString()
+                const { attributes, decryptionError } = this.decryptXML(encryptedData)
+                if (attributes) {
+                  callback(null, { attributes, relayState })
+                } else {
+                  const nestedError = this.makeNestedError(
+                    'Error in Step 5: Decrypt Artifact Response',
+                    decryptionError
+                  )
+                  callback(nestedError, { relayState })
+                }
               }
+            },
+            resolveError => {
+              const nestedError = this.makeNestedError(
+                'Error in Step 3: Send Artifact Resolve over OOB',
+                resolveError
+              )
+              callback(nestedError, { relayState })
             }
-          }
-        })
+          )
       }
     }
   }
