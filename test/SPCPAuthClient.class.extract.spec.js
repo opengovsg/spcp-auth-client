@@ -3,7 +3,7 @@ const { expect } = require('chai')
 const fs = require('fs')
 const { render } = require('mustache')
 const xpath = require('xpath')
-const xmldom = require('xmldom')
+const xmldom = require('@xmldom/xmldom')
 
 const { extract: { SINGPASS: singPass, CORPPASS: corpPass } } = require('../build/SPCPAuthClient')
 

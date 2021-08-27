@@ -3,7 +3,7 @@ const fs = require('fs')
 const { render } = require('mustache')
 const xmlCrypto = require('xml-crypto')
 const xpath = require('xpath')
-const { DOMParser } = require('xmldom')
+const { DOMParser } = require('@xmldom/xmldom')
 
 const { SignedXml, FileKeyInfo } = xmlCrypto
 const SPCPAuthClient = require('../build/SPCPAuthClient')

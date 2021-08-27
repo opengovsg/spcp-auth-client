@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/opengovsg/spcp-auth-client#readme",
   "dependencies": {
+    "@xmldom/xmldom": "^0.7.2",
     "axios": "^0.21.1",
     "base-64": "^1.0.0",
     "jsonwebtoken": "^8.3.0",
@@ -34,7 +35,6 @@
     "xml-crypto": "^2.1.2",
     "xml-encryption": "^1.2.4",
     "xml2json-light": "^1.0.6",
-    "xmldom": "^0.6.0",
     "xpath": "0.0.32"
   },
   "devDependencies": {
@@ -43,7 +43,6 @@
     "@types/jsonwebtoken": "^8.5.0",
     "@types/lodash": "^4.14.165",
     "@types/xml-crypto": "^1.4.1",
-    "@types/xmldom": "^0.1.30",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "chai": "4.3.4",
