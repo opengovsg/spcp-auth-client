@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import axios from 'axios'
 import xmlCrypto from 'xml-crypto'
 import { xml2json } from 'xml2json-light'
-import xmldom from 'xmldom'
+import xmldom from '@xmldom/xmldom'
 import xmlEnc from 'xml-encryption'
 import xpath from 'xpath'
 import { difference } from 'lodash'
@@ -157,7 +157,7 @@ class SPCPAuthClient {
         '</soapenv:Body>' +
         '</soapenv:Envelope>'
     } catch (err) {
-      signingError = err
+      signingError = err as Error
     }
 
     return { artifactResolve, signingError }
