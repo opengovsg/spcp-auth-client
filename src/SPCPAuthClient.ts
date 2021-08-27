@@ -157,7 +157,7 @@ class SPCPAuthClient {
         '</soapenv:Body>' +
         '</soapenv:Envelope>'
     } catch (err) {
-      signingError = err
+      signingError = err as Error
     }
 
     return { artifactResolve, signingError }
