@@ -302,7 +302,7 @@ class SPCPAuthClient {
             SOAPAction: 'http://www.oasis-open.org/committees/security',
           },
         }
-        axios.post(
+        axios.post<string>(
           this.idpEndpoint, // url
           artifactResolve, // data
           requestOptions
