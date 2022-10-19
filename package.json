@@ -33,7 +33,7 @@
     "jsonwebtoken": "^8.3.0",
     "lodash": "^4.17.21",
     "xml-crypto": "^3.0.0",
-    "xml-encryption": "^2.0.0",
+    "xml-encryption": "^3.0.0",
     "xml2json-light": "^1.0.6",
     "xpath": "0.0.32"
   },
@@ -53,7 +53,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "5.2.0",
     "eslint-plugin-standard": "5.0.0",
-    "mocha": "10.0.0",
+    "mocha": "10.1.0",
     "mustache": "4.2.0",
     "nyc": "15.1.0",
     "sinon": "^14.0.1",
