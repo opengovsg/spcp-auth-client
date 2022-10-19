@@ -33,7 +33,7 @@
     "jsonwebtoken": "^8.3.0",
     "lodash": "^4.17.21",
     "xml-crypto": "^3.0.0",
-    "xml-encryption": "^2.0.0",
+    "xml-encryption": "^3.0.0",
     "xml2json-light": "^1.0.6",
     "xpath": "0.0.32"
   },
