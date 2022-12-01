@@ -1,3 +1,7 @@
+# DEPRECATED: PLEASE READ
+
+This package has been deprecated and is no longer maintained
+
 # spcp-auth-client
 
 A node.js library for SingPass and CorpPass, common authentication methods
