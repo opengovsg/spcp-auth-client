@@ -1,6 +1,9 @@
 # DEPRECATED: PLEASE READ
 
-This package has been deprecated and is no longer maintained
+Singpass and Corppass no longer support SAML as of December 2022.
+Please use [@govtechsg/singpass-myinfo-oidc-helper](https://www.npmjs.com/package/@govtechsg/singpass-myinfo-oidc-helper) to connect via OIDC instead.
+
+This package has been deprecated and is no longer maintained.
 
 # spcp-auth-client
 
